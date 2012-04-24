@@ -83,39 +83,51 @@
           return finish();
         }
       };
-      new deferred.Deferred().then(callback).resolve(42, 24).always(callback);
-      new deferred.Deferred().always(callback).reject(42, 24).then(callback);
+      new deferred.Deferred().always(callback).resolve(42, 24).always(callback);
+      new deferred.Deferred().always(callback).reject(42, 24).always(callback);
       new deferred.Deferred().done(callback).resolve(42, 24).done(callback);
       return new deferred.Deferred().fail(callback).reject(42, 24).fail(callback);
     });
-    it('should alias always() to then()', function(done) {
-      var callback, def;
-      def = new deferred.Deferred();
-      callback = _.after(2, done);
-      return def.always(callback).then(callback).resolve();
-    });
-    return it('should provide a promise that has a restricted API', function(done) {
-      var callback, def, expectedMethods, method, promise, _i, _j, _len, _len1, _results;
-      def = new deferred.Deferred();
-      promise = def.promise();
-      console.log(promise);
-      expectedMethods = ['then', 'done', 'fail', 'always', 'state'];
-      assert.equal(_.keys(promise).length, expectedMethods.length);
-      for (_i = 0, _len = expectedMethods.length; _i < _len; _i++) {
-        method = expectedMethods[_i];
-        assert(_.has(promise, method));
-      }
-      callback = _.after(3, done);
-      promise.then(callback).always(callback).fail(callback).done(callback);
-      assert("pending", promise.state());
-      def.resolve();
-      assert.equal(_.keys(promise.fail(callback)).length, expectedMethods.length);
-      _results = [];
-      for (_j = 0, _len1 = expectedMethods.length; _j < _len1; _j++) {
-        method = expectedMethods[_j];
-        _results.push(assert(_.has(promise.fail(callback), method)));
-      }
-      return _results;
+    return describe('promises', function() {
+      var assertHasPromiseApi, assertIsPromise, expectedMethods;
+      expectedMethods = ['done', 'fail', 'always', 'state'];
+      assertHasPromiseApi = function(promise) {
+        var method, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = expectedMethods.length; _i < _len; _i++) {
+          method = expectedMethods[_i];
+          _results.push(assert(_.has(promise, method)));
+        }
+        return _results;
+      };
+      assertIsPromise = function(promise) {
+        assert.equal(_.keys(promise).length, expectedMethods.length);
+        return assertHasPromiseApi(promise);
+      };
+      it('should provide a promise that has a restricted API', function(done) {
+        var callback, def, promise;
+        def = new deferred.Deferred();
+        promise = def.promise();
+        assertIsPromise(promise);
+        callback = _.after(5, done);
+        promise.always(callback).always(callback).fail(callback).done(callback).fail(callback);
+        assertIsPromise(promise.done(callback));
+        assertIsPromise(promise.fail(callback));
+        assertIsPromise(promise.always(callback));
+        assert("pending", promise.state());
+        def.resolve();
+        return assert("resolved", promise.state());
+      });
+      return it('should create a promise out of a given object', function() {
+        var candidate, def, promise;
+        candidate = {
+          id: 42
+        };
+        def = new deferred.Deferred();
+        promise = def.promise(candidate);
+        assert.equal(candidate, promise);
+        return assertHasPromiseApi(candidate);
+      });
     });
   });
 

@@ -39,10 +39,10 @@ Released under the MIT License.
       return this._state;
     };
 
-    Deferred.prototype.promise = function() {
+    Deferred.prototype.promise = function(candidate) {
       var returnPromise, _promise,
         _this = this;
-      _promise = {};
+      _promise = candidate || {};
       _promise.state = function() {
         return _this.state();
       };
@@ -60,10 +60,6 @@ Released under the MIT License.
         },
         always: function() {
           _this.always.apply(_this, arguments);
-          return _promise;
-        },
-        then: function() {
-          _this.then.apply(_this, arguments);
           return _promise;
         }
       });
@@ -109,6 +105,12 @@ Released under the MIT License.
     };
   };
 
+  Deferred.prototype.done = callbackStorage('_doneCallbacks', RESOLVED);
+
+  Deferred.prototype.fail = callbackStorage('_failCallbacks', REJECTED);
+
+  Deferred.prototype.always = callbackStorage('_alwaysCallbacks', /.*/);
+
   terminator = function(targetState, callbackSetNames) {
     return function() {
       var callbackSets,
@@ -128,14 +130,6 @@ Released under the MIT License.
   Deferred.prototype.resolve = terminator(RESOLVED, ['_doneCallbacks', '_alwaysCallbacks']);
 
   Deferred.prototype.reject = terminator(REJECTED, ['_failCallbacks', '_alwaysCallbacks']);
-
-  Deferred.prototype.done = callbackStorage('_doneCallbacks', RESOLVED);
-
-  Deferred.prototype.fail = callbackStorage('_failCallbacks', REJECTED);
-
-  Deferred.prototype.always = callbackStorage('_alwaysCallbacks', /.*/);
-
-  Deferred.prototype.then = callbackStorage('_alwaysCallbacks', /.*/);
 
   (typeof exports !== "undefined" && exports !== null ? exports : window).Deferred = function() {
     return new Deferred();

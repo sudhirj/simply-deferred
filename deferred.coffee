@@ -19,8 +19,8 @@ class Deferred
 
     state: => @_state
 
-    promise: =>
-        _promise = {}
+    promise: (candidate) =>
+        _promise = candidate or {}
         _promise.state = => @state()
         returnPromise = -> return _promise        
         _.extend _promise, {
@@ -32,9 +32,6 @@ class Deferred
                 return _promise
             always: => 
                 @always arguments...
-                return _promise
-            then: => 
-                @then arguments...
                 return _promise            
         }
 
@@ -53,6 +50,10 @@ callbackStorage = (holder, stateMatcher) ->
         actionFor[@_state](arguments, @[holder], @_closingArguments, stateMatcher)                 
         return this
 
+Deferred::done = callbackStorage '_doneCallbacks', RESOLVED
+Deferred::fail = callbackStorage '_failCallbacks', REJECTED
+Deferred::always = callbackStorage '_alwaysCallbacks', /.*/
+
 terminator = (targetState, callbackSetNames) ->
     return ->
         if @_state is PENDING
@@ -65,9 +66,5 @@ terminator = (targetState, callbackSetNames) ->
 Deferred::resolve = terminator RESOLVED, ['_doneCallbacks', '_alwaysCallbacks']
 Deferred::reject = terminator REJECTED, ['_failCallbacks', '_alwaysCallbacks']
 
-Deferred::done = callbackStorage '_doneCallbacks', RESOLVED
-Deferred::fail = callbackStorage '_failCallbacks', REJECTED
-Deferred::always = callbackStorage '_alwaysCallbacks', /.*/
-Deferred::then = callbackStorage '_alwaysCallbacks', /.*/
 
 (exports ? window).Deferred = -> new Deferred()

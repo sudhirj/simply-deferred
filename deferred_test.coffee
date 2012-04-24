@@ -68,32 +68,42 @@ describe 'deferred', ->
         callback = (arg1, arg2) ->
             if arg1 is 42 and arg2 is 24
                 finish()
-        new deferred.Deferred().then(callback).resolve(42, 24).always(callback)
-        new deferred.Deferred().always(callback).reject(42, 24).then(callback)        
+        new deferred.Deferred().always(callback).resolve(42, 24).always(callback)
+        new deferred.Deferred().always(callback).reject(42, 24).always(callback)        
         new deferred.Deferred().done(callback).resolve(42, 24).done(callback)
         new deferred.Deferred().fail(callback).reject(42, 24).fail(callback)
+    
+    describe 'promises', ->
+        expectedMethods = ['done', 'fail', 'always', 'state']
+        assertHasPromiseApi = (promise) -> assert _.has(promise, method) for method in expectedMethods
+        assertIsPromise = (promise) ->            
+            assert.equal _.keys(promise).length, expectedMethods.length
+            assertHasPromiseApi promise
+            
+        it 'should provide a promise that has a restricted API', (done) ->
+            def = new deferred.Deferred()
+            promise = def.promise()
+                    
+            assertIsPromise promise    
 
-    it 'should alias always() to then()', (done) ->
-        def = new deferred.Deferred()
-        callback = _.after 2, done
-        def.always(callback).then(callback).resolve()
+            callback = _.after 5, done
+            promise.always(callback).always(callback).fail(callback).done(callback).fail(callback)
+            assertIsPromise promise.done callback
+            assertIsPromise promise.fail callback
+            assertIsPromise promise.always callback
 
-    it 'should provide a promise that has a restricted API', (done) ->
-        def = new deferred.Deferred()
-        promise = def.promise()
-        console.log promise
-        expectedMethods = ['then', 'done', 'fail', 'always', 'state']
-        assert.equal _.keys(promise).length, expectedMethods.length
-        assert _.has(promise, method) for method in expectedMethods
+            assert "pending", promise.state()
+            def.resolve()
+            assert "resolved", promise.state()
 
-        callback = _.after 3, done
-        promise.then(callback).always(callback).fail(callback).done(callback)        
-        assert "pending", promise.state()
-        def.resolve()
-
-        assert.equal _.keys(promise.fail(callback)).length, expectedMethods.length
-        assert _.has(promise.fail(callback), method) for method in expectedMethods
-        
+        it 'should create a promise out of a given object', ->
+            candidate = {id: 42}
+            def = new deferred.Deferred()
+            promise = def.promise(candidate)
+            assert.equal candidate, promise
+            assertHasPromiseApi candidate
 
 
-        
+
+
+            
