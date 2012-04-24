@@ -4,7 +4,14 @@ PENDING = "pending"
 RESOLVED = "resolved"
 REJECTED = "rejected"
 
-class _Deferred
+executeCallbacks = (callbacks, args) => (callback(args...) for callback in _.flatten(callbacks))
+    
+actionFor = {}
+actionFor[PENDING] = (callbacks, holder, closingArgs) -> holder.push _.flatten(callbacks)...
+actionFor[RESOLVED] = (callbacks, holder, closingArgs) -> executeCallbacks callbacks, closingArgs
+actionFor[REJECTED] = actionFor[RESOLVED]
+
+class _Deferred    
     constructor: ->
         @_state = PENDING
         @_doneCallbacks = []
@@ -12,52 +19,27 @@ class _Deferred
         @_alwaysCallbacks = []
         @_closingArguments = []
 
-    state: =>
-        @_state
+        @state = => @_state
 
-    _close: (newState, callbackSets, args) =>
-        @_state = newState
-        @_closingArguments = args
-        @_executeCallbacks callbackSets, args
+        callbackStorage = (holder) =>
+            return =>        
+                actionFor[@_state](arguments, holder, @_closingArguments)                 
+                return this
 
+        @done = callbackStorage @_doneCallbacks
+        @fail = callbackStorage @_failCallbacks
+        @always = callbackStorage @_alwaysCallbacks
+        @then = callbackStorage @_alwaysCallbacks
 
-    resolve: =>
-        if @_state is PENDING
-            @_close RESOLVED, [@_doneCallbacks, @_alwaysCallbacks], arguments            
-        return this
+        terminator = (targetState, callbackSets) =>
+            return =>
+                if @_state is PENDING
+                    @_state = targetState
+                    @_closingArguments = arguments
+                    executeCallbacks callbackSets, arguments
+                return this
 
-    reject: =>
-        if @_state is PENDING            
-            @_close REJECTED, [@_failCallbacks, @_alwaysCallbacks], arguments                        
-        return this
-
-    done: =>
-        callbacks = _.flatten arguments 
-        if @_state is PENDING
-            @_doneCallbacks.push callbacks...
-        if @_state is RESOLVED
-            @_executeCallbacks callbacks, @_closingArguments
-        return this
-
-    fail: =>
-        callbacks = _.flatten arguments
-        if @_state is PENDING
-            @_failCallbacks.push callbacks...
-        if @_state is REJECTED
-            @_executeCallbacks callbacks, @_closingArguments
-        return this
-
-    always: =>
-        callbacks = _.flatten arguments
-        if @_state is PENDING
-            @_alwaysCallbacks.push (_.flatten arguments)...
-        else 
-            @_executeCallbacks callbacks, @_closingArguments
-        return this
-
-    _executeCallbacks: (callbacks, args) =>
-        (callback(args...) for callback in _.flatten(callbacks))
-
-    then: => @always arguments...
+        @resolve = terminator RESOLVED, [@_doneCallbacks, @_alwaysCallbacks]
+        @reject = terminator REJECTED, [@_failCallbacks, @_alwaysCallbacks]
 
 exports.Deferred = -> new _Deferred()
