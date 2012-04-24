@@ -35,6 +35,7 @@ describe 'deferred', ->
         def.done callback, callback
         def.reject()
         def.done callback, [callback, callback]
+        def.fail callback, callback
         
 
     it 'should call all the fail callbacks', (done) ->
@@ -45,15 +46,7 @@ describe 'deferred', ->
         def.fail callback, callback
         def.resolve()
         def.fail callback, [callback, callback]     
-
-    it 'should call all the done callbacks', (done) ->
-        def = new deferred.Deferred()
-        callback = _.after 8, done
-        def.done(callback).done([callback, callback])        
-        def.resolve()
-        def.done callback, callback
-        def.reject()
-        def.done callback, [callback, callback]
+        def.done callback
 
     it 'should call all the always callbacks on resolution', (done) ->
         def = new deferred.Deferred()
@@ -62,11 +55,13 @@ describe 'deferred', ->
         def.resolve()
         def.always callback, callback
         def.always callback, [callback, callback]        
+        def.fail callback
 
     it 'should call the always callbacks on rejection', (done) ->
         def = new deferred.Deferred()        
         def.always done        
         def.reject()
+        def.done done
 
     it 'should call callbacks with arguments', (done) ->        
         finish = _.after 8, done
@@ -79,12 +74,26 @@ describe 'deferred', ->
         new deferred.Deferred().fail(callback).reject(42, 24).fail(callback)
 
     it 'should alias always() to then()', (done) ->
-        def = new deferred.Deferred()        
+        def = new deferred.Deferred()
         callback = _.after 2, done
         def.always(callback).then(callback).resolve()
+
+    it 'should provide a promise that has a restricted API', (done) ->
+        def = new deferred.Deferred()
+        promise = def.promise()
+        console.log promise
+        expectedMethods = ['then', 'done', 'fail', 'always', 'state']
+        assert.equal _.keys(promise).length, expectedMethods.length
+        assert _.has(promise, method) for method in expectedMethods
+
+        callback = _.after 3, done
+        promise.then(callback).always(callback).fail(callback).done(callback)        
+        assert "pending", promise.state()
+        def.resolve()
+
+        assert.equal _.keys(promise.fail(callback)).length, expectedMethods.length
+        assert _.has(promise.fail(callback), method) for method in expectedMethods
         
 
 
-
-
-
+        

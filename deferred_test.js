@@ -44,7 +44,8 @@
       def.resolve();
       def.done(callback, callback);
       def.reject();
-      return def.done(callback, [callback, callback]);
+      def.done(callback, [callback, callback]);
+      return def.fail(callback, callback);
     });
     it('should call all the fail callbacks', function(done) {
       var callback, def;
@@ -54,17 +55,8 @@
       def.reject();
       def.fail(callback, callback);
       def.resolve();
-      return def.fail(callback, [callback, callback]);
-    });
-    it('should call all the done callbacks', function(done) {
-      var callback, def;
-      def = new deferred.Deferred();
-      callback = _.after(8, done);
-      def.done(callback).done([callback, callback]);
-      def.resolve();
-      def.done(callback, callback);
-      def.reject();
-      return def.done(callback, [callback, callback]);
+      def.fail(callback, [callback, callback]);
+      return def.done(callback);
     });
     it('should call all the always callbacks on resolution', function(done) {
       var callback, def;
@@ -73,13 +65,15 @@
       def.always(callback).always([callback, callback]);
       def.resolve();
       def.always(callback, callback);
-      return def.always(callback, [callback, callback]);
+      def.always(callback, [callback, callback]);
+      return def.fail(callback);
     });
     it('should call the always callbacks on rejection', function(done) {
       var def;
       def = new deferred.Deferred();
       def.always(done);
-      return def.reject();
+      def.reject();
+      return def.done(done);
     });
     it('should call callbacks with arguments', function(done) {
       var callback, finish;
@@ -94,11 +88,34 @@
       new deferred.Deferred().done(callback).resolve(42, 24).done(callback);
       return new deferred.Deferred().fail(callback).reject(42, 24).fail(callback);
     });
-    return it('should alias always() to then()', function(done) {
+    it('should alias always() to then()', function(done) {
       var callback, def;
       def = new deferred.Deferred();
       callback = _.after(2, done);
       return def.always(callback).then(callback).resolve();
+    });
+    return it('should provide a promise that has a restricted API', function(done) {
+      var callback, def, expectedMethods, method, promise, _i, _j, _len, _len1, _results;
+      def = new deferred.Deferred();
+      promise = def.promise();
+      console.log(promise);
+      expectedMethods = ['then', 'done', 'fail', 'always', 'state'];
+      assert.equal(_.keys(promise).length, expectedMethods.length);
+      for (_i = 0, _len = expectedMethods.length; _i < _len; _i++) {
+        method = expectedMethods[_i];
+        assert(_.has(promise, method));
+      }
+      callback = _.after(3, done);
+      promise.then(callback).always(callback).fail(callback).done(callback);
+      assert("pending", promise.state());
+      def.resolve();
+      assert.equal(_.keys(promise.fail(callback)).length, expectedMethods.length);
+      _results = [];
+      for (_j = 0, _len1 = expectedMethods.length; _j < _len1; _j++) {
+        method = expectedMethods[_j];
+        _results.push(assert(_.has(promise.fail(callback), method)));
+      }
+      return _results;
     });
   });
 

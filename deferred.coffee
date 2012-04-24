@@ -1,4 +1,9 @@
-_ = _ || require 'underscore'
+###
+Deferred.js - v.0.1.0
+(c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com
+Released under the MIT License.
+###
+_ = window?._ || require 'underscore'
 
 PENDING = "pending"
 RESOLVED = "resolved"
@@ -14,16 +19,38 @@ class Deferred
 
     state: => @_state
 
+    promise: =>
+        _promise = {}
+        _promise.state = => @state()
+        returnPromise = -> return _promise        
+        _.extend _promise, {
+            done: => 
+                @done arguments...
+                return _promise
+            fail: => 
+                @fail arguments...
+                return _promise
+            always: => 
+                @always arguments...
+                return _promise
+            then: => 
+                @then arguments...
+                return _promise            
+        }
+
 executeCallbacks = (callbacks, args) => (callback(args...) for callback in _.flatten(callbacks))
+executeOnMatch = (state) -> 
+    return (callbacks, holder, closingArgs, stateMatcher) -> 
+        if state.match stateMatcher then executeCallbacks callbacks, closingArgs
     
 actionFor = {}
-actionFor[PENDING] = (callbacks, holder, closingArgs) -> holder.push _.flatten(callbacks)...
-actionFor[RESOLVED] = (callbacks, holder, closingArgs) -> executeCallbacks callbacks, closingArgs
-actionFor[REJECTED] = actionFor[RESOLVED]
+actionFor[PENDING] = (callbacks, holder, closingArgs, stateMatcher) -> holder.push _.flatten(callbacks)...
+actionFor[RESOLVED] = executeOnMatch RESOLVED
+actionFor[REJECTED] = executeOnMatch REJECTED
 
-callbackStorage = (holder) ->
-    return ->        
-        actionFor[@_state](arguments, @[holder], @_closingArguments)                 
+callbackStorage = (holder, stateMatcher) ->
+    return ->                
+        actionFor[@_state](arguments, @[holder], @_closingArguments, stateMatcher)                 
         return this
 
 terminator = (targetState, callbackSetNames) ->
@@ -38,9 +65,9 @@ terminator = (targetState, callbackSetNames) ->
 Deferred::resolve = terminator RESOLVED, ['_doneCallbacks', '_alwaysCallbacks']
 Deferred::reject = terminator REJECTED, ['_failCallbacks', '_alwaysCallbacks']
 
-Deferred::done = callbackStorage '_doneCallbacks'
-Deferred::fail = callbackStorage '_failCallbacks'
-Deferred::always = callbackStorage '_alwaysCallbacks'
-Deferred::then = callbackStorage '_alwaysCallbacks'
+Deferred::done = callbackStorage '_doneCallbacks', RESOLVED
+Deferred::fail = callbackStorage '_failCallbacks', REJECTED
+Deferred::always = callbackStorage '_alwaysCallbacks', /.*/
+Deferred::then = callbackStorage '_alwaysCallbacks', /.*/
 
 (exports ? window).Deferred = -> new Deferred()
