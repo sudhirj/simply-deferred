@@ -1,8 +1,18 @@
-_ = require 'underscore'
+_ = _ || require 'underscore'
 
 PENDING = "pending"
 RESOLVED = "resolved"
 REJECTED = "rejected"
+
+class Deferred    
+    constructor: ->
+        @_state = PENDING
+        @_doneCallbacks = []
+        @_failCallbacks = []
+        @_alwaysCallbacks = []
+        @_closingArguments = []
+
+    state: => @_state
 
 executeCallbacks = (callbacks, args) => (callback(args...) for callback in _.flatten(callbacks))
     
@@ -11,35 +21,26 @@ actionFor[PENDING] = (callbacks, holder, closingArgs) -> holder.push _.flatten(c
 actionFor[RESOLVED] = (callbacks, holder, closingArgs) -> executeCallbacks callbacks, closingArgs
 actionFor[REJECTED] = actionFor[RESOLVED]
 
-class _Deferred    
-    constructor: ->
-        @_state = PENDING
-        @_doneCallbacks = []
-        @_failCallbacks = []
-        @_alwaysCallbacks = []
-        @_closingArguments = []
+callbackStorage = (holder) ->
+    return ->        
+        actionFor[@_state](arguments, @[holder], @_closingArguments)                 
+        return this
 
-        @state = => @_state
+terminator = (targetState, callbackSetNames) ->
+    return ->
+        if @_state is PENDING
+            @_state = targetState
+            @_closingArguments = arguments
+            callbackSets = callbackSetNames.map (name) => @[name]
+            executeCallbacks callbackSets, arguments
+        return this
 
-        callbackStorage = (holder) =>
-            return =>        
-                actionFor[@_state](arguments, holder, @_closingArguments)                 
-                return this
+Deferred::resolve = terminator RESOLVED, ['_doneCallbacks', '_alwaysCallbacks']
+Deferred::reject = terminator REJECTED, ['_failCallbacks', '_alwaysCallbacks']
 
-        @done = callbackStorage @_doneCallbacks
-        @fail = callbackStorage @_failCallbacks
-        @always = callbackStorage @_alwaysCallbacks
-        @then = callbackStorage @_alwaysCallbacks
+Deferred::done = callbackStorage '_doneCallbacks'
+Deferred::fail = callbackStorage '_failCallbacks'
+Deferred::always = callbackStorage '_alwaysCallbacks'
+Deferred::then = callbackStorage '_alwaysCallbacks'
 
-        terminator = (targetState, callbackSets) =>
-            return =>
-                if @_state is PENDING
-                    @_state = targetState
-                    @_closingArguments = arguments
-                    executeCallbacks callbackSets, arguments
-                return this
-
-        @resolve = terminator RESOLVED, [@_doneCallbacks, @_alwaysCallbacks]
-        @reject = terminator REJECTED, [@_failCallbacks, @_alwaysCallbacks]
-
-exports.Deferred = -> new _Deferred()
+(exports ? window).Deferred = -> new Deferred()
