@@ -9,62 +9,57 @@ PENDING = "pending"
 RESOLVED = "resolved"
 REJECTED = "rejected"
 
-class Deferred    
-    constructor: ->
-        @_state = PENDING
-        @_doneCallbacks = []
-        @_failCallbacks = []
-        @_alwaysCallbacks = []
-        @_closingArguments = []
+flatten = _.flatten
+pushWhenPending = (state, holder, args) -> if state is PENDING then holder.push (flatten args)...
+execute = (callbacks, args) -> callback args... for callback in callbacks
 
-    state: => @_state
-
-    promise: (candidate) =>
-        _promise = candidate or {}
-        _promise.state = => @state()
-        returnPromise = -> return _promise        
-        _.extend _promise, {
-            done: => 
-                @done arguments...
-                return _promise
-            fail: => 
-                @fail arguments...
-                return _promise
-            always: => 
-                @always arguments...
-                return _promise            
-        }
-
-executeCallbacks = (callbacks, args) => (callback(args...) for callback in _.flatten(callbacks))
-executeOnMatch = (state) -> 
-    return (callbacks, holder, closingArgs, stateMatcher) -> 
-        if state.match stateMatcher then executeCallbacks callbacks, closingArgs
+Deferred = ->
+    state = PENDING
+    doneCallbacks = []
+    failCallbacks = []
+    alwaysCallbacks = []
+    closingArguments = {}
     
-actionFor = {}
-actionFor[PENDING] = (callbacks, holder, closingArgs, stateMatcher) -> holder.push _.flatten(callbacks)...
-actionFor[RESOLVED] = executeOnMatch RESOLVED
-actionFor[REJECTED] = executeOnMatch REJECTED
+    @promise = (candidate) ->
+        candidate = candidate || {}
+        candidate.state = -> state
 
-callbackStorage = (holder, stateMatcher) ->
-    return ->                
-        actionFor[@_state](arguments, @[holder], @_closingArguments, stateMatcher)                 
+        conditionallyExecute = (shouldRun, args) -> if shouldRun then execute flatten(args), closingArguments
+        
+        candidate.done = ->
+            pushWhenPending state, doneCallbacks, arguments            
+            conditionallyExecute state is RESOLVED, arguments
+            return candidate
+        candidate.fail = ->
+            pushWhenPending state, failCallbacks, arguments
+            conditionallyExecute state is REJECTED, arguments
+            return candidate
+        candidate.always = ->
+            pushWhenPending state, alwaysCallbacks, arguments
+            conditionallyExecute state isnt PENDING, arguments
+            return candidate
+        
+        return candidate
+    
+    @promise this
+    
+    terminate = (finalState, callbacks, args) ->    
+        if state is PENDING
+            state = finalState
+            closingArguments = args
+            execute callbacks, closingArguments            
+            execute alwaysCallbacks, closingArguments
+    
+    @resolve = ->
+        terminate RESOLVED, doneCallbacks, arguments
         return this
-
-Deferred::done = callbackStorage '_doneCallbacks', RESOLVED
-Deferred::fail = callbackStorage '_failCallbacks', REJECTED
-Deferred::always = callbackStorage '_alwaysCallbacks', /.*/
-
-terminator = (targetState, callbackSetNames) ->
-    return ->
-        if @_state is PENDING
-            @_state = targetState
-            @_closingArguments = arguments
-            callbackSets = callbackSetNames.map (name) => @[name]
-            executeCallbacks callbackSets, arguments
+    
+    @reject = ->
+        terminate REJECTED, failCallbacks, arguments
         return this
+    
+    return this
 
-Deferred::resolve = terminator RESOLVED, ['_doneCallbacks', '_alwaysCallbacks']
-Deferred::reject = terminator REJECTED, ['_failCallbacks', '_alwaysCallbacks']
 
 
 (exports ? window).Deferred = -> new Deferred()

@@ -8,9 +8,7 @@ Released under the MIT License.
 
 
 (function() {
-  var Deferred, PENDING, REJECTED, RESOLVED, actionFor, callbackStorage, executeCallbacks, executeOnMatch, terminator, _,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    _this = this;
+  var Deferred, PENDING, REJECTED, RESOLVED, execute, flatten, pushWhenPending, _;
 
   _ = (typeof window !== "undefined" && window !== null ? window._ : void 0) || require('underscore');
 
@@ -20,116 +18,78 @@ Released under the MIT License.
 
   REJECTED = "rejected";
 
-  Deferred = (function() {
+  flatten = _.flatten;
 
-    Deferred.name = 'Deferred';
-
-    function Deferred() {
-      this.promise = __bind(this.promise, this);
-
-      this.state = __bind(this.state, this);
-      this._state = PENDING;
-      this._doneCallbacks = [];
-      this._failCallbacks = [];
-      this._alwaysCallbacks = [];
-      this._closingArguments = [];
+  pushWhenPending = function(state, holder, args) {
+    if (state === PENDING) {
+      return holder.push.apply(holder, flatten(args));
     }
+  };
 
-    Deferred.prototype.state = function() {
-      return this._state;
-    };
-
-    Deferred.prototype.promise = function(candidate) {
-      var returnPromise, _promise,
-        _this = this;
-      _promise = candidate || {};
-      _promise.state = function() {
-        return _this.state();
-      };
-      returnPromise = function() {
-        return _promise;
-      };
-      return _.extend(_promise, {
-        done: function() {
-          _this.done.apply(_this, arguments);
-          return _promise;
-        },
-        fail: function() {
-          _this.fail.apply(_this, arguments);
-          return _promise;
-        },
-        always: function() {
-          _this.always.apply(_this, arguments);
-          return _promise;
-        }
-      });
-    };
-
-    return Deferred;
-
-  })();
-
-  executeCallbacks = function(callbacks, args) {
-    var callback, _i, _len, _ref, _results;
-    _ref = _.flatten(callbacks);
+  execute = function(callbacks, args) {
+    var callback, _i, _len, _results;
     _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      callback = _ref[_i];
+    for (_i = 0, _len = callbacks.length; _i < _len; _i++) {
+      callback = callbacks[_i];
       _results.push(callback.apply(null, args));
     }
     return _results;
   };
 
-  executeOnMatch = function(state) {
-    return function(callbacks, holder, closingArgs, stateMatcher) {
-      if (state.match(stateMatcher)) {
-        return executeCallbacks(callbacks, closingArgs);
+  Deferred = function() {
+    var alwaysCallbacks, closingArguments, doneCallbacks, failCallbacks, state, terminate;
+    state = PENDING;
+    doneCallbacks = [];
+    failCallbacks = [];
+    alwaysCallbacks = [];
+    closingArguments = {};
+    this.promise = function(candidate) {
+      var conditionallyExecute;
+      candidate = candidate || {};
+      candidate.state = function() {
+        return state;
+      };
+      conditionallyExecute = function(shouldRun, args) {
+        if (shouldRun) {
+          return execute(flatten(args), closingArguments);
+        }
+      };
+      candidate.done = function() {
+        pushWhenPending(state, doneCallbacks, arguments);
+        conditionallyExecute(state === RESOLVED, arguments);
+        return candidate;
+      };
+      candidate.fail = function() {
+        pushWhenPending(state, failCallbacks, arguments);
+        conditionallyExecute(state === REJECTED, arguments);
+        return candidate;
+      };
+      candidate.always = function() {
+        pushWhenPending(state, alwaysCallbacks, arguments);
+        conditionallyExecute(state !== PENDING, arguments);
+        return candidate;
+      };
+      return candidate;
+    };
+    this.promise(this);
+    terminate = function(finalState, callbacks, args) {
+      if (state === PENDING) {
+        state = finalState;
+        closingArguments = args;
+        execute(callbacks, closingArguments);
+        return execute(alwaysCallbacks, closingArguments);
       }
     };
-  };
-
-  actionFor = {};
-
-  actionFor[PENDING] = function(callbacks, holder, closingArgs, stateMatcher) {
-    return holder.push.apply(holder, _.flatten(callbacks));
-  };
-
-  actionFor[RESOLVED] = executeOnMatch(RESOLVED);
-
-  actionFor[REJECTED] = executeOnMatch(REJECTED);
-
-  callbackStorage = function(holder, stateMatcher) {
-    return function() {
-      actionFor[this._state](arguments, this[holder], this._closingArguments, stateMatcher);
+    this.resolve = function() {
+      terminate(RESOLVED, doneCallbacks, arguments);
       return this;
     };
-  };
-
-  Deferred.prototype.done = callbackStorage('_doneCallbacks', RESOLVED);
-
-  Deferred.prototype.fail = callbackStorage('_failCallbacks', REJECTED);
-
-  Deferred.prototype.always = callbackStorage('_alwaysCallbacks', /.*/);
-
-  terminator = function(targetState, callbackSetNames) {
-    return function() {
-      var callbackSets,
-        _this = this;
-      if (this._state === PENDING) {
-        this._state = targetState;
-        this._closingArguments = arguments;
-        callbackSets = callbackSetNames.map(function(name) {
-          return _this[name];
-        });
-        executeCallbacks(callbackSets, arguments);
-      }
+    this.reject = function() {
+      terminate(REJECTED, failCallbacks, arguments);
       return this;
     };
+    return this;
   };
-
-  Deferred.prototype.resolve = terminator(RESOLVED, ['_doneCallbacks', '_alwaysCallbacks']);
-
-  Deferred.prototype.reject = terminator(REJECTED, ['_failCallbacks', '_alwaysCallbacks']);
 
   (typeof exports !== "undefined" && exports !== null ? exports : window).Deferred = function() {
     return new Deferred();

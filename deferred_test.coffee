@@ -102,8 +102,4 @@ describe 'deferred', ->
             promise = def.promise(candidate)
             assert.equal candidate, promise
             assertHasPromiseApi candidate
-
-
-
-
             
