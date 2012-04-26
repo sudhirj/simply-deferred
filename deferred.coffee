@@ -1,8 +1,9 @@
 ###
-Deferred.js - v.0.1.0
+Simply Deferred - v.0.1.0
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com
 Released under the MIT License.
 ###
+
 _ = window?._ || require 'underscore'
 
 PENDING = "pending"
@@ -62,4 +63,4 @@ Deferred = ->
 
 
 
-(exports ? window).Deferred = -> new Deferred()
+(exports || window).Deferred = -> new Deferred()
