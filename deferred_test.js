@@ -88,6 +88,17 @@
       new deferred.Deferred().done(callback).resolve(42, 24).done(callback);
       return new deferred.Deferred().fail(callback).reject(42, 24).fail(callback);
     });
+    it('should provide a when method', function(done) {
+      var all, callback, def1, def2, def3;
+      callback = _.after(4, done);
+      def1 = new deferred.Deferred().done(callback);
+      def2 = new deferred.Deferred().done(callback);
+      def3 = new deferred.Deferred().done(callback);
+      all = deferred.when(def1, def2, def3).done(callback);
+      def1.resolve();
+      def2.resolve();
+      return def3.resolve();
+    });
     return describe('promises', function() {
       var assertHasPromiseApi, assertIsPromise, expectedMethods;
       expectedMethods = ['done', 'fail', 'always', 'state'];
@@ -118,7 +129,7 @@
         def.resolve();
         return assert("resolved", promise.state());
       });
-      return it('should create a promise out of a given object', function() {
+      it('should create a promise out of a given object', function() {
         var candidate, def, promise;
         candidate = {
           id: 42
@@ -127,6 +138,11 @@
         promise = def.promise(candidate);
         assert.equal(candidate, promise);
         return assertHasPromiseApi(candidate);
+      });
+      return describe('when', function() {
+        return it('should return a promise', function() {
+          return assertIsPromise(deferred.when(new deferred.Deferred()));
+        });
       });
     });
   });

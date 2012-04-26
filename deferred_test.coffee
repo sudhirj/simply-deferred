@@ -72,6 +72,17 @@ describe 'deferred', ->
         new deferred.Deferred().always(callback).reject(42, 24).always(callback)        
         new deferred.Deferred().done(callback).resolve(42, 24).done(callback)
         new deferred.Deferred().fail(callback).reject(42, 24).fail(callback)
+
+    it 'should provide a when method', (done) ->
+        callback = _.after 4, done
+        def1 = new deferred.Deferred().done callback
+        def2 = new deferred.Deferred().done callback
+        def3 = new deferred.Deferred().done callback
+        all = deferred.when(def1, def2, def3).done callback
+        def1.resolve()
+        def2.resolve()
+        def3.resolve()
+
     
     describe 'promises', ->
         expectedMethods = ['done', 'fail', 'always', 'state']
@@ -102,4 +113,7 @@ describe 'deferred', ->
             promise = def.promise(candidate)
             assert.equal candidate, promise
             assertHasPromiseApi candidate
-            
+
+        describe 'when', ->
+            it 'should return a promise', ->
+                assertIsPromise deferred.when new deferred.Deferred()

@@ -61,6 +61,13 @@ Deferred = ->
     
     return this
 
+(exports || window).when = ->
+    trigger = new Deferred()
+    defs = flatten arguments
+    finish = _.after defs.length, trigger.resolve
+    _(defs).each (def) -> def.done finish
+    trigger.promise()
+
 
 
 (exports || window).Deferred = -> new Deferred()

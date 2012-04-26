@@ -91,6 +91,17 @@ Released under the MIT License.
     return this;
   };
 
+  (exports || window).when = function() {
+    var defs, finish, trigger;
+    trigger = new Deferred();
+    defs = flatten(arguments);
+    finish = _.after(defs.length, trigger.resolve);
+    _(defs).each(function(def) {
+      return def.done(finish);
+    });
+    return trigger.promise();
+  };
+
   (exports || window).Deferred = function() {
     return new Deferred();
   };
