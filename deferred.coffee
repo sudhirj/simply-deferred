@@ -51,11 +51,17 @@ Deferred = ->
             
     return this
 
-(exports || window).when = ->
+_when = ->
     trigger = new Deferred()
     defs = flatten arguments
     finish = _.after defs.length, trigger.resolve
     def.done(finish) for def in defs
     trigger.promise()
 
-(exports || window).Deferred = -> new Deferred()
+if (typeof exports isnt 'undefined')     
+    exports.Deferred = -> new Deferred()
+    exports.when = _when
+else 
+    this['Deferred'] = -> new Deferred();
+    this['Deferred']['when'] = _when
+  

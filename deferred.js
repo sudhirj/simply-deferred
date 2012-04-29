@@ -8,7 +8,7 @@ Released under the MIT License.
 
 
 (function() {
-  var Deferred, PENDING, REJECTED, RESOLVED, execute, flatten, _;
+  var Deferred, PENDING, REJECTED, RESOLVED, execute, flatten, _, _when;
 
   _ = (typeof window !== "undefined" && window !== null ? window._ : void 0) || require('underscore');
 
@@ -82,7 +82,7 @@ Released under the MIT License.
     return this;
   };
 
-  (exports || window).when = function() {
+  _when = function() {
     var def, defs, finish, trigger, _i, _len;
     trigger = new Deferred();
     defs = flatten(arguments);
@@ -94,8 +94,16 @@ Released under the MIT License.
     return trigger.promise();
   };
 
-  (exports || window).Deferred = function() {
-    return new Deferred();
-  };
+  if (typeof exports !== 'undefined') {
+    exports.Deferred = function() {
+      return new Deferred();
+    };
+    exports.when = _when;
+  } else {
+    this['Deferred'] = function() {
+      return new Deferred();
+    };
+    this['Deferred']['when'] = _when;
+  }
 
 }).call(this);
