@@ -2,12 +2,13 @@
   "author": "Sudhir Jonathan <contact.me@sudhirjonathan.com> (http://www.sudhirjonathan.com)",
   "name": "simply-deferred",
   "description": "A deferred library for Node.js and the browser with a simplified jQuery compatible API",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "homepage": "http://sudhirj.github.com/simply-deferred/",
   "repository": {
     "type": "git",
     "url": "git://github.com/sudhirj/simply-deferred.git"
   },
+  "main": "./deferred",
   "dependencies": ["underscore"],
   "devDependencies": ["mocha"],
   "optionalDependencies": {},

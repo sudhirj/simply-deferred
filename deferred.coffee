@@ -1,5 +1,5 @@
 ###
-Simply Deferred - v.0.1.0
+Simply Deferred - v.1.0.0
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com
 Released under the MIT License.
 ###
