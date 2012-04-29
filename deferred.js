@@ -8,7 +8,7 @@ Released under the MIT License.
 
 
 (function() {
-  var Deferred, PENDING, REJECTED, RESOLVED, execute, flatten, pushWhenPending, _;
+  var Deferred, PENDING, REJECTED, RESOLVED, execute, flatten, _;
 
   _ = (typeof window !== "undefined" && window !== null ? window._ : void 0) || require('underscore');
 
@@ -20,85 +20,77 @@ Released under the MIT License.
 
   flatten = _.flatten;
 
-  pushWhenPending = function(state, holder, args) {
-    if (state === PENDING) {
-      return holder.push.apply(holder, flatten(args));
-    }
-  };
-
   execute = function(callbacks, args) {
-    var callback, _i, _len, _results;
+    var callback, _i, _len, _ref, _results;
+    _ref = flatten(callbacks);
     _results = [];
-    for (_i = 0, _len = callbacks.length; _i < _len; _i++) {
-      callback = callbacks[_i];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      callback = _ref[_i];
       _results.push(callback.apply(null, args));
     }
     return _results;
   };
 
   Deferred = function() {
-    var alwaysCallbacks, closingArguments, doneCallbacks, failCallbacks, state, terminate;
+    var alwaysCallbacks, close, closingArguments, doneCallbacks, failCallbacks, state;
     state = PENDING;
     doneCallbacks = [];
     failCallbacks = [];
     alwaysCallbacks = [];
     closingArguments = {};
     this.promise = function(candidate) {
-      var conditionallyExecute;
+      var storeCallbacks;
       candidate = candidate || {};
       candidate.state = function() {
         return state;
       };
-      conditionallyExecute = function(shouldRun, args) {
-        if (shouldRun) {
-          return execute(flatten(args), closingArguments);
-        }
+      storeCallbacks = function(shouldExecuteImmediately, holder) {
+        return function() {
+          if (state === PENDING) {
+            holder.push.apply(holder, flatten(arguments));
+          }
+          if (shouldExecuteImmediately()) {
+            execute(arguments, closingArguments);
+          }
+          return candidate;
+        };
       };
-      candidate.done = function() {
-        pushWhenPending(state, doneCallbacks, arguments);
-        conditionallyExecute(state === RESOLVED, arguments);
-        return candidate;
-      };
-      candidate.fail = function() {
-        pushWhenPending(state, failCallbacks, arguments);
-        conditionallyExecute(state === REJECTED, arguments);
-        return candidate;
-      };
-      candidate.always = function() {
-        pushWhenPending(state, alwaysCallbacks, arguments);
-        conditionallyExecute(state !== PENDING, arguments);
-        return candidate;
-      };
+      candidate.done = storeCallbacks((function() {
+        return state === RESOLVED;
+      }), doneCallbacks);
+      candidate.fail = storeCallbacks((function() {
+        return state === REJECTED;
+      }), failCallbacks);
+      candidate.always = storeCallbacks((function() {
+        return state !== PENDING;
+      }), alwaysCallbacks);
       return candidate;
     };
     this.promise(this);
-    terminate = function(finalState, callbacks, args) {
-      if (state === PENDING) {
-        state = finalState;
-        closingArguments = args;
-        execute(callbacks, closingArguments);
-        return execute(alwaysCallbacks, closingArguments);
-      }
+    close = function(finalState, callbacks) {
+      return function() {
+        if (state === PENDING) {
+          state = finalState;
+          closingArguments = arguments;
+          execute([callbacks, alwaysCallbacks], closingArguments);
+        }
+        return this;
+      };
     };
-    this.resolve = function() {
-      terminate(RESOLVED, doneCallbacks, arguments);
-      return this;
-    };
-    this.reject = function() {
-      terminate(REJECTED, failCallbacks, arguments);
-      return this;
-    };
+    this.resolve = close(RESOLVED, doneCallbacks);
+    this.reject = close(REJECTED, failCallbacks);
     return this;
   };
 
   (exports || window).when = function() {
-    var defs, finish, trigger;
+    var def, defs, finish, trigger, _i, _len;
     trigger = new Deferred();
     defs = flatten(arguments);
     finish = _.after(defs.length, trigger.resolve);
-    _(defs).each(function(def) {
-      return def.done(finish);
-    });
+    for (_i = 0, _len = defs.length; _i < _len; _i++) {
+      def = defs[_i];
+      def.done(finish);
+    }
     return trigger.promise();
   };
 

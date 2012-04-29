@@ -11,8 +11,7 @@ RESOLVED = "resolved"
 REJECTED = "rejected"
 
 flatten = _.flatten
-pushWhenPending = (state, holder, args) -> if state is PENDING then holder.push (flatten args)...
-execute = (callbacks, args) -> callback args... for callback in callbacks
+execute = (callbacks, args) -> callback args... for callback in flatten callbacks
 
 Deferred = ->
     state = PENDING
@@ -24,50 +23,39 @@ Deferred = ->
     @promise = (candidate) ->
         candidate = candidate || {}
         candidate.state = -> state
-
-        conditionallyExecute = (shouldRun, args) -> if shouldRun then execute flatten(args), closingArguments
         
-        candidate.done = ->
-            pushWhenPending state, doneCallbacks, arguments            
-            conditionallyExecute state is RESOLVED, arguments
-            return candidate
-        candidate.fail = ->
-            pushWhenPending state, failCallbacks, arguments
-            conditionallyExecute state is REJECTED, arguments
-            return candidate
-        candidate.always = ->
-            pushWhenPending state, alwaysCallbacks, arguments
-            conditionallyExecute state isnt PENDING, arguments
-            return candidate
+        storeCallbacks = (shouldExecuteImmediately, holder) ->
+            return ->
+                if state is PENDING then holder.push (flatten arguments)...                
+                if shouldExecuteImmediately() then execute arguments, closingArguments
+                return candidate
+        
+        candidate.done = storeCallbacks((-> state is RESOLVED), doneCallbacks)            
+        candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks)
+        candidate.always = storeCallbacks((-> state isnt PENDING), alwaysCallbacks)
         
         return candidate
     
     @promise this
     
-    terminate = (finalState, callbacks, args) ->    
-        if state is PENDING
-            state = finalState
-            closingArguments = args
-            execute callbacks, closingArguments            
-            execute alwaysCallbacks, closingArguments
+    close = (finalState, callbacks) ->    
+        return ->
+            if state is PENDING
+                state = finalState
+                closingArguments = arguments
+                execute [callbacks, alwaysCallbacks], closingArguments                            
+            return this
     
-    @resolve = ->
-        terminate RESOLVED, doneCallbacks, arguments
-        return this
-    
-    @reject = ->
-        terminate REJECTED, failCallbacks, arguments
-        return this
-    
+    @resolve = close RESOLVED, doneCallbacks
+    @reject = close REJECTED, failCallbacks
+            
     return this
 
 (exports || window).when = ->
     trigger = new Deferred()
     defs = flatten arguments
     finish = _.after defs.length, trigger.resolve
-    _(defs).each (def) -> def.done finish
+    def.done(finish) for def in defs
     trigger.promise()
-
-
 
 (exports || window).Deferred = -> new Deferred()
