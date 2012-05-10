@@ -1,5 +1,5 @@
 ###
-Simply Deferred - v.1.0.0
+Simply Deferred - v.1.1.0
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com
 Released under the MIT License.
 ###
@@ -51,6 +51,7 @@ Deferred = ->
             
     return this
 
+
 _when = ->
     trigger = new Deferred()
     defs = flatten arguments
@@ -58,10 +59,31 @@ _when = ->
     def.done(finish) for def in defs
     trigger.promise()
 
+
+_installInto = (fw) ->
+    fw.Deferred = -> new Deferred()
+    fw.ajax = _.wrap fw.ajax, (ajax, options = {}) ->
+        def = new Deferred()
+
+        createWrapper = (wrapped, finisher) ->
+            return _.wrap wrapped, (func, args...) ->
+                func(args...)
+                finisher(args...)
+
+        options.success = createWrapper options.success, def.resolve        
+        options.error = createWrapper options.error, def.reject
+
+        ajax(options)
+        
+        def.promise()
+
+
 if (typeof exports isnt 'undefined')     
     exports.Deferred = -> new Deferred()
     exports.when = _when
+    exports.installInto = _installInto
 else 
     this['Deferred'] = -> new Deferred();
     this['Deferred']['when'] = _when
+    this['Deferred']['installInto'] = _installInto
   

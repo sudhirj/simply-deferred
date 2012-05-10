@@ -30,5 +30,8 @@ Simply Deferred is partially compatible with jQuery's API, so the [docs and usag
 
 In my experience, these methods cover over 90% of all use cases. I've also decided to drop `resolveWith` and `rejectWith` because [CoffeeScript](http://coffeescript.org/#fat_arrow) and [most](http://api.jquery.com/jQuery.proxy/), if not [all](http://documentcloud.github.com/underscore/#bind) JS libraries now provide easier ways to pre-bind your functions. This is allowed the code to be far simpler, smaller and better tested. 
 
-###Usage with Zepto (coming soon)
-Simply Deffered will also act as a plugin to [Zepto](http://zeptojs.com/). The absence of a Deferred library was one of the biggest reasons I've been holding back, so I thought it made sense to write one.  
+###Usage with Zepto
+Simply Deffered also acts as a plugin to [Zepto](http://zeptojs.com/). The absence of a Deferred library was one of the biggest reasons I've been holding back, so I thought it made sense to write one. Once you have both Zepto and Simply Deferred on your page, just do `Deferred.installInto(Zepto)` to set it up. The installation makes the following changes to bring it closer to jQuery:
+
+* Aliases the `Deferred` constructor to `$.Deferred`.
+* Wraps `$.ajax` to return a `promise`, which has only the following methods: `state()`, `done()`, `fail()` and `always()`. The arguments passed to the `done` and `fail` callbacks are the same ones passed to the `success` and `error` options. 

@@ -2,6 +2,13 @@ deferred = require './deferred'
 assert = require 'assert'
 _ = require 'underscore'
 
+
+expectedMethods = ['done', 'fail', 'always', 'state']
+assertHasPromiseApi = (promise) -> assert _.has(promise, method) for method in expectedMethods
+assertIsPromise = (promise) ->            
+    assert.equal _.keys(promise).length, expectedMethods.length
+    assertHasPromiseApi promise
+
 describe 'deferred', ->
     it 'should create and return a deferred object', ->
         def = new deferred.Deferred()
@@ -84,13 +91,7 @@ describe 'deferred', ->
         def3.resolve()
 
     
-    describe 'promises', ->
-        expectedMethods = ['done', 'fail', 'always', 'state']
-        assertHasPromiseApi = (promise) -> assert _.has(promise, method) for method in expectedMethods
-        assertIsPromise = (promise) ->            
-            assert.equal _.keys(promise).length, expectedMethods.length
-            assertHasPromiseApi promise
-            
+    describe 'promises', ->                    
         it 'should provide a promise that has a restricted API', (done) ->
             def = new deferred.Deferred()
             promise = def.promise()
@@ -117,3 +118,41 @@ describe 'deferred', ->
         describe 'when', ->
             it 'should return a promise', ->
                 assertIsPromise deferred.when new deferred.Deferred()
+
+    describe 'installation into a jQuery compatible library', ->
+        exampleArgs = [42, 24]
+        it 'should install .Deferred', ->
+            zepto = {}
+            deferred.installInto(zepto)
+            assertHasPromiseApi zepto.Deferred()
+
+        it 'should wrap .ajax()', (done) ->            
+            zepto = {}
+            zepto.ajax = (options) -> done()
+            deferred.installInto zepto
+            assertIsPromise zepto.ajax()
+
+        it 'should resolve on success', (done) ->
+            callback = _.after 3, done
+            zepto = {}
+            zepto.ajax = (options) -> options.success(exampleArgs...)
+            deferred.installInto zepto
+            success = (args...) -> if args.length is exampleArgs.length then callback()
+            promise = zepto.ajax({
+                success: success    
+            })
+            promise.done success
+            promise.always success
+        
+        it 'should reject on failure', (done) ->
+            callback = _.after 3, done
+            zepto = {}
+            zepto.ajax = (options) -> options.error(exampleArgs...)
+            deferred.installInto zepto
+            error = (args...) -> if args.length is exampleArgs.length then callback()
+            promise = zepto.ajax({
+                error: error    
+            })
+            promise.fail error
+            promise.always error
+
