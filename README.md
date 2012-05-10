@@ -1,5 +1,5 @@
 #Simply Deferred
-###A simplified version of jQuery's Deferred API for Node and the browser
+###Simplified jQuery Deferred API for Node and the browser
 
 ##Installation
     npm install simply-deferred
