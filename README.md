@@ -37,4 +37,5 @@ In my experience, these methods cover over 90% of all use cases. I've also decid
 Simply Deffered also acts as a plugin to [Zepto](http://zeptojs.com/). The absence of a Deferred library was one of the biggest reasons I've been holding back, so I thought it made sense to write one. Once you have both Zepto and Simply Deferred on your page, just do `Deferred.installInto(Zepto)` to set it up. The installation makes the following changes to bring it closer to jQuery:
 
 * Aliases the `Deferred` constructor to `$.Deferred`.
-* Wraps `$.ajax` to return a `promise`, which has only the following methods: `state()`, `done()`, `fail()` and `always()`. The arguments passed to the `done` and `fail` callbacks are the same ones passed to the `success` and `error` options. 
+* Aliases the `when` method to `$.when`.
+* Wraps `$.ajax` to return a `promise`, which has only the following methods: `state()`, `done()`, `fail()` and `always()`. The arguments passed to the `done` and `fail` callbacks are the same ones passed to the `success` and `error` options.

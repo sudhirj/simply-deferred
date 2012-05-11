@@ -126,6 +126,11 @@ describe 'deferred', ->
             deferred.installInto(zepto)
             assertHasPromiseApi zepto.Deferred()
 
+        it 'should install .when', ->
+            zepto = {}
+            deferred.installInto(zepto)
+            assert.equal zepto.when.toString(), deferred.when.toString()
+
         it 'should wrap .ajax()', (done) ->            
             zepto = {}
             zepto.ajax = (options) -> done()
@@ -143,6 +148,7 @@ describe 'deferred', ->
             })
             promise.done success
             promise.always success
+            promise.fail -> fail()
         
         it 'should reject on failure', (done) ->
             callback = _.after 3, done
@@ -155,4 +161,16 @@ describe 'deferred', ->
             })
             promise.fail error
             promise.always error
+            promise.done -> fail()
+
+        it 'should work when no ajax callbacks are provided', (done) ->            
+            zepto = {}
+            zepto.ajax = (options) -> options.success()
+            deferred.installInto zepto
+            zepto.ajax({
+                success: null
+            }).done(done)
+            
+
+
 

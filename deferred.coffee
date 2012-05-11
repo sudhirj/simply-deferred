@@ -1,5 +1,5 @@
 ###
-Simply Deferred - v.1.1.1
+Simply Deferred - v.1.1.2
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com
 Released under the MIT License.
 ###
@@ -67,7 +67,7 @@ _installInto = (fw) ->
 
         createWrapper = (wrapped, finisher) ->
             return _.wrap wrapped, (func, args...) ->
-                func(args...)
+                func(args...) if func
                 finisher(args...)
 
         options.success = createWrapper options.success, def.resolve        
@@ -76,6 +76,7 @@ _installInto = (fw) ->
         ajax(options)
         
         def.promise()
+    fw.when = _when
 
 
 if (typeof exports isnt 'undefined')     
