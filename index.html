@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Simply-Deferred by sudhirj</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Simply-Deferred</h1>
+        <p>A deferred library for Node.js and the browser with a simplified jQuery API</p>
+        <p class="view"><a href="https://github.com/sudhirj/simply-deferred">View the Project on GitHub <small>sudhirj/simply-deferred</small></a></p>
+        <ul>
+          <li><a href="https://github.com/sudhirj/simply-deferred/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/sudhirj/simply-deferred/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/sudhirj/simply-deferred">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Simply Deferred</h1>
+
+<h3>Simplified jQuery Deferred API for Node and the browser</h3>
+
+<h2>Installation</h2>
+
+<pre><code>npm install simply-deferred
+</code></pre>
+
+<p>If you're on a browser, simply include 
+    <a href="https://raw.github.com/sudhirj/simply-deferred/master/deferred.min.js">https://raw.github.com/sudhirj/simply-deferred/master/deferred.min.js</a></p>
+
+<h2>Usage</h2>
+
+<pre><code>var Deferred = require('simply-deferred').Deferred;    
+var rendering = new Deferred();
+rendering.done(function(){
+    console.log('Finished rendering');
+});
+
+//...
+
+rendering.resolve();
+</code></pre>
+
+<h2>API</h2>
+
+<p>Simply Deferred is partially compatible with jQuery's API, so the <a href="http://api.jquery.com/category/deferred-object/">docs and usage</a> are the same, except that they're restricted to the following methods:</p>
+
+<ul>
+<li><code>Deferred()</code></li>
+<li><code>deferred.state()</code></li>
+<li><code>deferred.done()</code></li>
+<li><code>deferred.fail()</code></li>
+<li><code>deferred.always()</code></li>
+<li><code>deferred.promise()</code></li>
+<li><code>deferred.resolve()</code></li>
+<li><code>deferred.reject()</code></li>
+<li><code>when()</code></li>
+</ul><p>In my experience, these methods cover over 90% of all use cases. I've also decided to drop <code>resolveWith</code> and <code>rejectWith</code> because <a href="http://coffeescript.org/#fat_arrow">CoffeeScript</a> and <a href="http://api.jquery.com/jQuery.proxy/">most</a>, if not <a href="http://documentcloud.github.com/underscore/#bind">all</a> JS libraries now provide easier ways to pre-bind your functions. This is allowed the code to be far simpler, smaller and better tested. </p>
+
+<h3>Usage with Zepto</h3>
+
+<p>Simply Deffered also acts as a plugin to <a href="http://zeptojs.com/">Zepto</a>. The absence of a Deferred library was one of the biggest reasons I've been holding back, so I thought it made sense to write one. Once you have both Zepto and Simply Deferred on your page, just do <code>Deferred.installInto(Zepto)</code> to set it up. The installation makes the following changes to bring it closer to jQuery:</p>
+
+<ul>
+<li>Aliases the <code>Deferred</code> constructor to <code>$.Deferred</code>.</li>
+<li>Aliases the <code>when</code> method to <code>$.when</code>.</li>
+<li>Wraps <code>$.ajax</code> to return a <code>promise</code>, which has only the following methods: <code>state()</code>, <code>done()</code>, <code>fail()</code> and <code>always()</code>. The arguments passed to the <code>done</code> and <code>fail</code> callbacks are the same ones passed to the <code>success</code> and <code>error</code> options.</li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/sudhirj">sudhirj</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-27684561-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
