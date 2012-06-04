@@ -1,16 +1,34 @@
 ###
-Simply Deferred - v.1.1.2
-(c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com
-Released under the MIT License.
+Simply Deferred - v.1.1.3
+(c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com, MIT Licensed.
+Portions of this code are inspired and borrowed from Underscore.js (http://underscorejs.org/) (MIT License)
 ###
-
-_ = window?._ || require 'underscore'
 
 PENDING = "pending"
 RESOLVED = "resolved"
 REJECTED = "rejected"
 
-flatten = _.flatten
+has = (obj, prop) -> obj?.hasOwnProperty prop
+isArguments = (obj) -> return has(obj, 'length') and has(obj, 'callee')
+
+flatten = (array) ->
+    return flatten Array.prototype.slice.call(array) if isArguments array    
+    return [array] if not Array.isArray array 
+    return array.reduce (memo, value) ->        
+        return memo.concat flatten value if Array.isArray(value)
+        memo.push value
+        return memo
+    , []
+  
+after = (times, func) ->
+    return func() if times <= 0        
+    return -> func.apply(this, arguments) if --times < 1
+                
+wrap = (func, wrapper) ->
+    return ->
+        args = [func].concat Array.prototype.slice.call(arguments, 0)
+        wrapper.apply this, args
+    
 execute = (callbacks, args) -> callback args... for callback in flatten callbacks
 
 Deferred = ->
@@ -55,18 +73,18 @@ Deferred = ->
 _when = ->
     trigger = new Deferred()
     defs = flatten arguments
-    finish = _.after defs.length, trigger.resolve
+    finish = after defs.length, trigger.resolve
     def.done(finish) for def in defs
     trigger.promise()
 
 
-_installInto = (fw) ->
+installInto = (fw) ->
     fw.Deferred = -> new Deferred()
-    fw.ajax = _.wrap fw.ajax, (ajax, options = {}) ->
+    fw.ajax = wrap fw.ajax, (ajax, options = {}) ->
         def = new Deferred()
 
         createWrapper = (wrapped, finisher) ->
-            return _.wrap wrapped, (func, args...) ->
+            return wrap wrapped, (func, args...) ->
                 func(args...) if func
                 finisher(args...)
 
@@ -76,15 +94,11 @@ _installInto = (fw) ->
         ajax(options)
         
         def.promise()
+
     fw.when = _when
 
 
-if (typeof exports isnt 'undefined')     
-    exports.Deferred = -> new Deferred()
-    exports.when = _when
-    exports.installInto = _installInto
-else 
-    this['Deferred'] = -> new Deferred();
-    this['Deferred']['when'] = _when
-    this['Deferred']['installInto'] = _installInto
-  
+container = if (typeof exports isnt 'undefined') then exports else this
+container.Deferred = -> new Deferred()
+container.when = _when
+container.installInto = installInto
