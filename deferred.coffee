@@ -1,5 +1,5 @@
 ###
-Simply Deferred - v.1.1.3
+Simply Deferred - v.1.1.4
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com, MIT Licensed.
 Portions of this code are inspired and borrowed from Underscore.js (http://underscorejs.org/) (MIT License)
 ###
@@ -97,8 +97,11 @@ installInto = (fw) ->
 
     fw.when = _when
 
-
-container = if (typeof exports isnt 'undefined') then exports else this
-container.Deferred = -> new Deferred()
-container.when = _when
-container.installInto = installInto
+if (typeof exports isnt 'undefined')     
+    exports.Deferred = -> new Deferred()
+    exports.when = _when
+    exports.installInto = installInto
+else 
+    this.Deferred = -> new Deferred();
+    this.Deferred.when = _when
+    this.Deferred.installInto = installInto
