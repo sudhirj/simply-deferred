@@ -79,7 +79,7 @@ Portions of this code are inspired and borrowed from Underscore.js (http://under
     alwaysCallbacks = [];
     closingArguments = {};
     this.promise = function(candidate) {
-      var storeCallbacks;
+      var pipe, storeCallbacks;
       candidate = candidate || {};
       candidate.state = function() {
         return state;
@@ -95,6 +95,37 @@ Portions of this code are inspired and borrowed from Underscore.js (http://under
           return candidate;
         };
       };
+      pipe = function(doneFilter, failFilter) {
+        var new_def, new_done, new_fail;
+        new_def = new Deferred();
+        if (doneFilter != null) {
+          new_done = function() {
+            var args, returned, _base;
+            args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+            returned = doneFilter.apply(null, args);
+            if ((returned.done != null) && (returned.fail != null)) {
+              return typeof returned.done === "function" ? typeof (_base = returned.done(new_def.resolve)).fail === "function" ? _base.fail(new_def.reject) : void 0 : void 0;
+            } else {
+              return new_def.resolve(returned);
+            }
+          };
+          candidate.done(new_done);
+        }
+        if (doneFilter != null) {
+          new_fail = function() {
+            var args, returned, _base;
+            args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+            returned = failFilter.apply(null, args);
+            if ((returned.done != null) && (returned.fail != null)) {
+              return typeof returned.done === "function" ? typeof (_base = returned.done(new_def.resolve)).fail === "function" ? _base.fail(new_def.reject) : void 0 : void 0;
+            } else {
+              return new_def.reject(returned);
+            }
+          };
+          candidate.fail(new_fail);
+        }
+        return new_def.promise();
+      };
       candidate.done = storeCallbacks((function() {
         return state === RESOLVED;
       }), doneCallbacks);
@@ -104,6 +135,8 @@ Portions of this code are inspired and borrowed from Underscore.js (http://under
       candidate.always = storeCallbacks((function() {
         return state !== PENDING;
       }), alwaysCallbacks);
+      candidate.pipe = pipe;
+      candidate.then = pipe;
       return candidate;
     };
     this.promise(this);
