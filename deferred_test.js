@@ -9,7 +9,7 @@
 
   _ = require('underscore');
 
-  expectedMethods = ['done', 'fail', 'always', 'state'];
+  expectedMethods = ['done', 'fail', 'always', 'state', 'then', 'pipe'];
 
   assertHasPromiseApi = function(promise) {
     var method, _i, _len, _results;
@@ -116,6 +116,44 @@
       def1.resolve();
       def2.resolve();
       return def3.resolve();
+    });
+    it('should provide a pipe method', function() {
+      var count_off, countdown, my_list, one, t_minus, two, zero;
+      countdown = deferred.Deferred();
+      two = deferred.Deferred();
+      one = deferred.Deferred();
+      zero = deferred.Deferred();
+      zero.resolve(0);
+      count_off = function(list, i) {
+        list.push(i);
+        return list;
+      };
+      my_list = [];
+      t_minus = countdown.pipe(function(list) {
+        return count_off(list, 3);
+      });
+      t_minus = t_minus.pipe(function(list) {
+        return two.pipe((function(i) {
+          return count_off(list, i);
+        }));
+      });
+      t_minus = t_minus.pipe(function(list) {
+        return one.pipe((function(i) {
+          return count_off(list, i);
+        }));
+      });
+      t_minus = t_minus.pipe(function(list) {
+        return zero.pipe((function(i) {
+          return count_off(list, i);
+        }));
+      });
+      t_minus.done(function(list) {
+        return my_list = list;
+      });
+      one.resolve(1);
+      countdown.resolve([]);
+      two.resolve(2);
+      return assert.deepEqual([3, 2, 1, 0], my_list);
     });
     describe('promises', function() {
       it('should provide a promise that has a restricted API', function(done) {

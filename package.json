@@ -10,7 +10,7 @@
   },
   "main": "./deferred",
   "dependencies": [],
-  "devDependencies": ["mocha"],
+  "devDependencies": ["mocha", "underscore"],
   "optionalDependencies": {},
   "engines": {
     "node": "*"
