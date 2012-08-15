@@ -90,34 +90,39 @@ describe 'deferred', ->
         def2.resolve()
         def3.resolve()
 
-    it 'should provide a pipe method', () ->
-      countdown = deferred.Deferred()
-      two = deferred.Deferred()
-      one = deferred.Deferred()
-      zero = deferred.Deferred()
-      zero.resolve(0)
-      count_off = (list, i)->
-        list.push(i)
-        list
-      my_list = []
-      t_minus = countdown.pipe (list)->
-        count_off(list, 3)
-      t_minus = t_minus.pipe (list)->
-        two.pipe ((i)-> count_off(list, i))
-      t_minus = t_minus.pipe (list)->
-        one.pipe ((i)-> count_off(list, i))
-      t_minus = t_minus.pipe (list)->
-        zero.pipe ((i)-> count_off(list, i))
-      t_minus.done (list)->
-        my_list = list
+    describe 'pipe', ->        
+        it 'should pipe on resolution', (done) ->
+            finisher = (value) -> if value is 10 then done()
+            def = new deferred.Deferred()
+            filtered = def.pipe (value) -> value * 2
+            def.resolve 5
+            filtered.done finisher
 
+        it 'should pipe on rejection', (done) ->
+            finisher = (value) -> if value is 6 then done()
+            def = new deferred.Deferred()
+            filtered = def.pipe null, (value) -> value * 3
+            def.reject 2
+            filtered.fail finisher            
 
-      one.resolve(1)
-      countdown.resolve([])
-      two.resolve(2)
-      assert.deepEqual [3, 2, 1, 0], my_list
+        it 'should pass through for null filters for done', (done) -> 
+            finisher = (value) -> if value is 5 then done()
+            def = new deferred.Deferred()
+            filtered = def.pipe(null, null)
+            def.resolve 5
+            filtered.done finisher
+        
+        it 'should pass through for null filters for fail', (done) -> 
+            finisher = (value) -> if value is 5 then done()
+            def = new deferred.Deferred()
+            filtered = def.pipe(null, null)
+            def.reject 5
+            filtered.fail finisher
 
-
+    describe 'then', ->
+        it 'should alias pipe', ->
+            def = new deferred.Deferred()
+            assert.equal def.then, def.pipe
 
     describe 'promises', ->
         it 'should provide a promise that has a restricted API', (done) ->

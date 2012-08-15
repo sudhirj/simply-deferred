@@ -47,29 +47,15 @@ Deferred = ->
                 if state is PENDING then holder.push (flatten arguments)...
                 if shouldExecuteImmediately() then execute arguments, closingArguments
                 return candidate
-        pipe = (doneFilter, failFilter)->
-            new_def = new Deferred()
-            if doneFilter?
-              new_done = (args...)->
-                returned = doneFilter(args...)
-                if returned.done? && returned.fail?
-                  returned.done?(new_def.resolve).fail?(new_def.reject)
-                else
-                  new_def.resolve(returned)
 
-              candidate.done(new_done)
-            if doneFilter?
-              new_fail = (args...)->
-                returned = failFilter(args...)
-                if returned.done? && returned.fail?
-                  returned.done?(new_def.resolve).fail?(new_def.reject)
-                else
-                  new_def.reject(returned)
-
-              candidate.fail(new_fail)
-
-            new_def.promise()
-
+        pipe = (doneFilter, failFilter) ->                        
+            deferred = new Deferred()
+            filter = (target, source, filter) ->
+                if filter then target -> source filter (flatten arguments)...
+                else target -> source (flatten arguments)...
+            filter candidate.done, deferred.resolve, doneFilter
+            filter candidate.fail, deferred.reject, failFilter
+            deferred
 
         candidate.done = storeCallbacks((-> state is RESOLVED), doneCallbacks)
         candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks)

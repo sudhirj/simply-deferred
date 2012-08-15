@@ -117,43 +117,66 @@
       def2.resolve();
       return def3.resolve();
     });
-    it('should provide a pipe method', function() {
-      var count_off, countdown, my_list, one, t_minus, two, zero;
-      countdown = deferred.Deferred();
-      two = deferred.Deferred();
-      one = deferred.Deferred();
-      zero = deferred.Deferred();
-      zero.resolve(0);
-      count_off = function(list, i) {
-        list.push(i);
-        return list;
-      };
-      my_list = [];
-      t_minus = countdown.pipe(function(list) {
-        return count_off(list, 3);
+    describe('pipe', function() {
+      it('should pipe on resolution', function(done) {
+        var def, filtered, finisher;
+        finisher = function(value) {
+          if (value === 10) {
+            return done();
+          }
+        };
+        def = new deferred.Deferred();
+        filtered = def.pipe(function(value) {
+          return value * 2;
+        });
+        def.resolve(5);
+        return filtered.done(finisher);
       });
-      t_minus = t_minus.pipe(function(list) {
-        return two.pipe((function(i) {
-          return count_off(list, i);
-        }));
+      it('should pipe on rejection', function(done) {
+        var def, filtered, finisher;
+        finisher = function(value) {
+          if (value === 6) {
+            return done();
+          }
+        };
+        def = new deferred.Deferred();
+        filtered = def.pipe(null, function(value) {
+          return value * 3;
+        });
+        def.reject(2);
+        return filtered.fail(finisher);
       });
-      t_minus = t_minus.pipe(function(list) {
-        return one.pipe((function(i) {
-          return count_off(list, i);
-        }));
+      it('should pass through for null filters for done', function(done) {
+        var def, filtered, finisher;
+        finisher = function(value) {
+          if (value === 5) {
+            return done();
+          }
+        };
+        def = new deferred.Deferred();
+        filtered = def.pipe(null, null);
+        def.resolve(5);
+        return filtered.done(finisher);
       });
-      t_minus = t_minus.pipe(function(list) {
-        return zero.pipe((function(i) {
-          return count_off(list, i);
-        }));
+      return it('should pass through for null filters for fail', function(done) {
+        var def, filtered, finisher;
+        finisher = function(value) {
+          if (value === 5) {
+            return done();
+          }
+        };
+        def = new deferred.Deferred();
+        filtered = def.pipe(null, null);
+        def.reject(5);
+        return filtered.fail(finisher);
       });
-      t_minus.done(function(list) {
-        return my_list = list;
+    });
+    describe('then', function() {
+      return it('should alias pipe', function() {
+        var def;
+        def = new deferred.Deferred();
+        return assert.equal(def.then, def.pipe);
       });
-      one.resolve(1);
-      countdown.resolve([]);
-      two.resolve(2);
-      return assert.deepEqual([3, 2, 1, 0], my_list);
     });
     describe('promises', function() {
       it('should provide a promise that has a restricted API', function(done) {
