@@ -29,6 +29,8 @@ Simply Deferred is partially compatible with jQuery's API, so the [docs and usag
 * `deferred.promise()`
 * `deferred.resolve()`
 * `deferred.reject()`
+* `deferred.pipe()`
+* `deferred.then()`
 * `when()`
 
 In my experience, these methods cover over 90% of all use cases. I've also decided to drop `resolveWith` and `rejectWith` because [CoffeeScript](http://coffeescript.org/#fat_arrow) and [most](http://api.jquery.com/jQuery.proxy/), if not [all](http://documentcloud.github.com/underscore/#bind) JS libraries now provide easier ways to pre-bind your functions. This is allowed the code to be far simpler, smaller and better tested. 
