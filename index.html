@@ -17,7 +17,10 @@
       <header>
         <h1>Simply-Deferred</h1>
         <p>A deferred library for Node.js and the browser with a simplified jQuery API</p>
+
         <p class="view"><a href="https://github.com/sudhirj/simply-deferred">View the Project on GitHub <small>sudhirj/simply-deferred</small></a></p>
+
+
         <ul>
           <li><a href="https://github.com/sudhirj/simply-deferred/zipball/master">Download <strong>ZIP File</strong></a></li>
           <li><a href="https://github.com/sudhirj/simply-deferred/tarball/master">Download <strong>TAR Ball</strong></a></li>
@@ -63,6 +66,8 @@ rendering.resolve();
 <li><code>deferred.promise()</code></li>
 <li><code>deferred.resolve()</code></li>
 <li><code>deferred.reject()</code></li>
+<li><code>deferred.pipe()</code></li>
+<li><code>deferred.then()</code></li>
 <li><code>when()</code></li>
 </ul><p>In my experience, these methods cover over 90% of all use cases. I've also decided to drop <code>resolveWith</code> and <code>rejectWith</code> because <a href="http://coffeescript.org/#fat_arrow">CoffeeScript</a> and <a href="http://api.jquery.com/jQuery.proxy/">most</a>, if not <a href="http://documentcloud.github.com/underscore/#bind">all</a> JS libraries now provide easier ways to pre-bind your functions. This is allowed the code to be far simpler, smaller and better tested. </p>
 
