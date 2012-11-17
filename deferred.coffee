@@ -1,5 +1,5 @@
 ###
-Simply Deferred - v.1.2
+Simply Deferred - v.1.2.1
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com, MIT Licensed.
 Portions of this code are inspired and borrowed from Underscore.js (http://underscorejs.org/) (MIT License)
 ###
