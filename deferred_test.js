@@ -204,8 +204,28 @@
         return assertHasPromiseApi(candidate);
       });
       return describe('when', function() {
-        return it('should return a promise', function() {
+        it('should return a promise', function() {
           return assertIsPromise(deferred.when(new deferred.Deferred()));
+        });
+        it('should resolve when all deps have succeeded', function() {
+          var after_all, d1, d2;
+          d1 = new deferred.Deferred();
+          d2 = new deferred.Deferred();
+          after_all = deferred.when(d1, d2);
+          d1.resolve();
+          assert.equal(after_all.state(), 'pending');
+          d2.resolve();
+          return assert.equal(after_all.state(), 'resolved');
+        });
+        return it('should reject when there are some failures', function() {
+          var after_all, d1, d2;
+          d1 = new deferred.Deferred();
+          d2 = new deferred.Deferred();
+          after_all = deferred.when(d1, d2);
+          d1.resolve();
+          assert.equal(after_all.state(), 'pending');
+          d2.reject();
+          return assert.equal(after_all.state(), 'rejected');
         });
       });
     });

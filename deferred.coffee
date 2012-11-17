@@ -86,6 +86,7 @@ _when = ->
     defs = flatten arguments
     finish = after defs.length, trigger.resolve
     def.done(finish) for def in defs
+    def.fail(-> trigger.reject()) for def in defs
     trigger.promise()
 
 

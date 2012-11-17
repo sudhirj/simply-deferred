@@ -152,6 +152,24 @@ describe 'deferred', ->
             it 'should return a promise', ->
                 assertIsPromise deferred.when new deferred.Deferred()
 
+            it 'should resolve when all deps have succeeded', ->
+                d1 = new deferred.Deferred()
+                d2 = new deferred.Deferred()
+                after_all = deferred.when(d1, d2)
+                d1.resolve()
+                assert.equal after_all.state(), 'pending'
+                d2.resolve()
+                assert.equal after_all.state(), 'resolved'
+
+            it 'should reject when there are some failures', ->
+                d1 = new deferred.Deferred()
+                d2 = new deferred.Deferred()
+                after_all = deferred.when(d1, d2)
+                d1.resolve()
+                assert.equal after_all.state(), 'pending'
+                d2.reject()
+                assert.equal after_all.state(), 'rejected'
+
     describe 'installation into a jQuery compatible library', ->
         exampleArgs = [42, 24]
         it 'should install .Deferred', ->
