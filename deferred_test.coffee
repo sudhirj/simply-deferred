@@ -24,6 +24,7 @@ describe 'deferred', ->
     def.reject()
     assert.equal def.state(), "resolved"
 
+
   it 'should maintain a rejected state', ->
     def = new deferred.Deferred()
     assert.equal def.state(), "pending"
@@ -43,6 +44,28 @@ describe 'deferred', ->
     def.reject()
     def.done callback, [callback, callback]
     def.fail callback, callback
+
+  it 'should scope done callbacks when using resolveWith', (done) ->
+    callback = _.after 2, done
+    def = new deferred.Deferred()
+    finishHolder = {finisher: callback}
+    finish = (arg1) -> 
+      assert.equal(42, arg1)
+      @finisher()
+    def.done finish
+    def.always -> callback()
+    def.resolveWith(finishHolder, 42)
+
+  it 'should scope fail callbacks when using rejectWith', (done) -> 
+    callback = _.after 2, done
+    def = new deferred.Deferred()
+    finishHolder = {finisher: callback}
+    finish = (arg1) -> 
+      assert.equal(42, arg1)
+      @finisher()
+    def.fail finish
+    def.always -> callback()
+    def.rejectWith(finishHolder, 42)
 
 
   it 'should call all the fail callbacks', (done) ->

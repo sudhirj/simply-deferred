@@ -60,13 +60,13 @@ Portions of this code are inspired and borrowed from Underscore.js (http://under
     };
   };
 
-  execute = function(callbacks, args) {
+  execute = function(callbacks, args, context) {
     var callback, _i, _len, _ref, _results;
     _ref = flatten(callbacks);
     _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       callback = _ref[_i];
-      _results.push(callback.apply(null, args));
+      _results.push(callback.call.apply(callback, [context].concat(__slice.call(args))));
     }
     return _results;
   };
@@ -139,6 +139,16 @@ Portions of this code are inspired and borrowed from Underscore.js (http://under
     };
     this.resolve = close(RESOLVED, doneCallbacks);
     this.reject = close(REJECTED, failCallbacks);
+    this.resolveWith = function() {
+      var args, context;
+      context = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      return execute([doneCallbacks, alwaysCallbacks], args, context);
+    };
+    this.rejectWith = function() {
+      var args, context;
+      context = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      return execute([failCallbacks, alwaysCallbacks], args, context);
+    };
     return this;
   };
 

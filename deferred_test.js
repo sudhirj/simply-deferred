@@ -65,6 +65,40 @@
       def.done(callback, [callback, callback]);
       return def.fail(callback, callback);
     });
+    it('should scope done callbacks when using resolveWith', function(done) {
+      var callback, def, finish, finishHolder;
+      callback = _.after(2, done);
+      def = new deferred.Deferred();
+      finishHolder = {
+        finisher: callback
+      };
+      finish = function(arg1) {
+        assert.equal(42, arg1);
+        return this.finisher();
+      };
+      def.done(finish);
+      def.always(function() {
+        return callback();
+      });
+      return def.resolveWith(finishHolder, 42);
+    });
+    it('should scope fail callbacks when using rejectWith', function(done) {
+      var callback, def, finish, finishHolder;
+      callback = _.after(2, done);
+      def = new deferred.Deferred();
+      finishHolder = {
+        finisher: callback
+      };
+      finish = function(arg1) {
+        assert.equal(42, arg1);
+        return this.finisher();
+      };
+      def.fail(finish);
+      def.always(function() {
+        return callback();
+      });
+      return def.rejectWith(finishHolder, 42);
+    });
     it('should call all the fail callbacks', function(done) {
       var callback, def;
       def = new deferred.Deferred();

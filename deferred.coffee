@@ -29,7 +29,7 @@ wrap = (func, wrapper) ->
     args = [func].concat Array.prototype.slice.call(arguments, 0)
     wrapper.apply this, args
 
-execute = (callbacks, args) -> callback args... for callback in flatten callbacks
+execute = (callbacks, args, context) -> callback.call(context, args...) for callback in flatten callbacks
 
 Deferred = ->
   state = PENDING
@@ -77,9 +77,10 @@ Deferred = ->
 
   @resolve = close RESOLVED, doneCallbacks
   @reject = close REJECTED, failCallbacks
+  @resolveWith = (context, args...) -> execute [doneCallbacks, alwaysCallbacks], args, context
+  @rejectWith = (context, args...) -> execute [failCallbacks, alwaysCallbacks], args, context    
 
   return this
-
 
 _when = ->
   trigger = new Deferred()
