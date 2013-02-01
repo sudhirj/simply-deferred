@@ -65,13 +65,13 @@ rendering.resolve();
 <li><code>deferred.always()</code></li>
 <li><code>deferred.promise()</code></li>
 <li><code>deferred.resolve()</code></li>
+<li><code>deferred.resolveWith()</code></li>
+<li><code>deferred.rejectWith()</code></li>
 <li><code>deferred.reject()</code></li>
 <li><code>deferred.pipe()</code></li>
 <li><code>deferred.then()</code></li>
 <li><code>when()</code></li>
-</ul><p>In my experience, these methods cover over 90% of all use cases. I've also decided to drop <code>resolveWith</code> and <code>rejectWith</code> because <a href="http://coffeescript.org/#fat_arrow">CoffeeScript</a> and <a href="http://api.jquery.com/jQuery.proxy/">most</a>, if not <a href="http://documentcloud.github.com/underscore/#bind">all</a> JS libraries now provide easier ways to pre-bind your functions. This is allowed the code to be far simpler, smaller and better tested. </p>
-
-<h3>Usage with Zepto</h3>
+</ul><h3>Usage with Zepto</h3>
 
 <p>Simply Deffered also acts as a plugin to <a href="http://zeptojs.com/">Zepto</a>. The absence of a Deferred library was one of the biggest reasons I've been holding back, so I thought it made sense to write one. Once you have both Zepto and Simply Deferred on your page, just do <code>Deferred.installInto(Zepto)</code> to set it up. The installation makes the following changes to bring it closer to jQuery:</p>
 
