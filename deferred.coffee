@@ -1,5 +1,5 @@
 ###
-Simply Deferred - v.1.3.1
+Simply Deferred - v.1.3.2
 (c) 2012 Sudhir Jonathan, contact.me@sudhirjonathan.com, MIT Licensed.
 Portions of this code are inspired and borrowed from Underscore.js (http://underscorejs.org/) (MIT License)
 ###
@@ -67,18 +67,18 @@ Deferred = ->
 
   @promise this
 
-  close = (finalState, callbacks) ->
+  close = (finalState, callbacks, context) ->
     return ->
       if state is PENDING
         state = finalState
         closingArguments = arguments
-        execute [callbacks, alwaysCallbacks], closingArguments
+        execute [callbacks, alwaysCallbacks], closingArguments, context
       return this
 
   @resolve = close RESOLVED, doneCallbacks
   @reject = close REJECTED, failCallbacks
-  @resolveWith = (context, args...) -> execute [doneCallbacks, alwaysCallbacks], args, context
-  @rejectWith = (context, args...) -> execute [failCallbacks, alwaysCallbacks], args, context    
+  @resolveWith = (context, args...) -> close(RESOLVED, doneCallbacks, context)(args...)
+  @rejectWith = (context, args...) -> close(REJECTED, failCallbacks, context)(args...)
 
   return this
 

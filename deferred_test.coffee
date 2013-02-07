@@ -55,6 +55,7 @@ describe 'deferred', ->
     def.done finish
     def.always -> callback()
     def.resolveWith(finishHolder, 42)
+    assert.equal def.state(), 'resolved'
 
   it 'should scope fail callbacks when using rejectWith', (done) -> 
     callback = _.after 2, done
@@ -66,6 +67,7 @@ describe 'deferred', ->
     def.fail finish
     def.always -> callback()
     def.rejectWith(finishHolder, 42)
+    assert.equal def.state(), 'rejected'
 
 
   it 'should call all the fail callbacks', (done) ->

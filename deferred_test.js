@@ -80,7 +80,8 @@
       def.always(function() {
         return callback();
       });
-      return def.resolveWith(finishHolder, 42);
+      def.resolveWith(finishHolder, 42);
+      return assert.equal(def.state(), 'resolved');
     });
     it('should scope fail callbacks when using rejectWith', function(done) {
       var callback, def, finish, finishHolder;
@@ -97,7 +98,8 @@
       def.always(function() {
         return callback();
       });
-      return def.rejectWith(finishHolder, 42);
+      def.rejectWith(finishHolder, 42);
+      return assert.equal(def.state(), 'rejected');
     });
     it('should call all the fail callbacks', function(done) {
       var callback, def;
