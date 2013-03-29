@@ -1,102 +1,608 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Simply-Deferred by sudhirj</title>
+<head>
+  <title>Simply Deferred</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h1">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1>Simply Deferred</h1>
+<h3>Simplified Deferred Library (jQuery API) for Node and the Browser</h3>
+<h4>MIT Licensed.</h4>
+<p>Portions of this code are inspired and borrowed from <a href="http://underscorejs.org/">underscore.js</a> (MIT License)</p>
+<h4><a href="http://github.com/sudhirj/simply-deferred">Source (github)</a> | <a href="https://github.com/sudhirj/simply-deferred#simply-deferred">Documentation</a></h4>
+<p>&copy; Sudhir Jonathan <a href="http://www.sudhirjonathan.com">sudhirjonathan.com</a></p>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1>Simply-Deferred</h1>
-        <p>A deferred library for Node.js and the browser with a simplified jQuery API</p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>VERSION = <span class="string">'1.3.2'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>First, let&#39;s set up the constants that we&#39;ll need to signify the state of the <code>deferred</code> object. These will be returned from the <code>state()</code> method.</p>
 
-        <p class="view"><a href="https://github.com/sudhirj/simply-deferred">View the Project on GitHub <small>sudhirj/simply-deferred</small></a></p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>PENDING = <span class="string">"pending"</span>
+RESOLVED = <span class="string">"resolved"</span>
+REJECTED = <span class="string">"rejected"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p><code>has</code> and <code>isArguments</code> are both workarounds for JS quirks. We use them only to flatten arrays. </p>
+<p><code>has</code> checks if an object natively owns a particular property, </p>
 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">has</span></span> = (obj, prop) -&gt; obj?.hasOwnProperty prop</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>while <code>isArguments</code> checks if the given object is a method arguments object (like an array, but not quite).</p>
 
-        <ul>
-          <li><a href="https://github.com/sudhirj/simply-deferred/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/sudhirj/simply-deferred/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/sudhirj/simply-deferred">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h1>Simply Deferred</h1>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">isArguments</span></span> = (obj) -&gt; <span class="keyword">return</span> has(obj, <span class="string">'length'</span>) <span class="keyword">and</span> has(obj, <span class="string">'callee'</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Borrowed from the incredibly useful <a href="http://underscorejs.org/">underscore.js</a>, these three utilities help 
+flatten argument arrays,</p>
 
-<h3>Simplified jQuery Deferred API for Node and the browser</h3>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">flatten</span></span> = (array) -&gt;
+  <span class="keyword">return</span> flatten Array.prototype.slice.call(array) <span class="keyword">if</span> isArguments array
+  <span class="keyword">return</span> [array] <span class="keyword">if</span> <span class="keyword">not</span> Array.isArray array</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <blockquote>
+<p><code>reduce</code> requires a modern JS interpreter, or a shim.</p>
+</blockquote>
 
-<h2>Installation</h2>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">return</span> array.reduce (memo, value) -&gt;    
+    <span class="keyword">return</span> memo.concat flatten value <span class="keyword">if</span> Array.isArray(value)
+    memo.push value
+    <span class="keyword">return</span> memo
+  , []</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>call functions only after they&#39;ve been invoked a certain number of times, </p>
 
-<pre><code>npm install simply-deferred
-</code></pre>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">after</span></span> = (times, func) -&gt;
+  <span class="keyword">return</span> func() <span class="keyword">if</span> times &lt;= <span class="number">0</span>
+  <span class="keyword">return</span> -&gt; func.apply(<span class="keyword">this</span>, arguments) <span class="keyword">if</span> --times &lt; <span class="number">1</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>and wrap functions so we can run code before and after execution.</p>
 
-<p>If you're on a browser, simply include 
-    <a href="https://raw.github.com/sudhirj/simply-deferred/master/deferred.min.js">https://raw.github.com/sudhirj/simply-deferred/master/deferred.min.js</a></p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">wrap</span></span> = (func, wrapper) -&gt;
+  <span class="keyword">return</span> -&gt;
+    args = [func].concat Array.prototype.slice.call(arguments, <span class="number">0</span>)
+    wrapper.apply <span class="keyword">this</span>, args</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Now we&#39;ll need a general callback executor, with optional control over the execution context.</p>
 
-<h2>Usage</h2>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">execute</span></span> = (callbacks, args, context) -&gt; callback.call(context, args...) <span class="keyword">for</span> callback <span class="keyword">in</span> flatten callbacks</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Let&#39;s start with the Deferred object constructor - it needs no arguments </p>
 
-<pre><code>var Deferred = require('simply-deferred').Deferred;    
-var rendering = new Deferred();
-rendering.done(function(){
-    console.log('Finished rendering');
-});
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">Deferred</span></span> = -&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>and all <code>deferred</code> objects are in a <code>&#39;pending&#39;</code> state when initialized.</p>
 
-//...
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  state = PENDING
+  doneCallbacks = []
+  failCallbacks = []
+  alwaysCallbacks = []
+  closingArguments = {}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Calling <code>.promise()</code> gives you an object that you pass around your code indiscriminately. 
+Any code can add callbacks to a <code>promise</code>, but none can alter the state of the <code>deferred</code> itself. 
+You can also transform any candidate object into a promise for this particular deferred object by passing it in.</p>
 
-rendering.resolve();
-</code></pre>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="property">@promise</span> = (candidate) -&gt;
+    candidate = candidate || {}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p><code>.state()</code> returns the state of the current deferred object. This will be one of <code>&#39;pending&#39;</code>, <code>&#39;resolved&#39;</code> or <code>&#39;rejected&#39;</code>.</p>
 
-<h2>API</h2>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    candidate.<span class="function"><span class="title">state</span></span> = -&gt; state</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Let&#39;s now create a mechanism to store the callbacks that are added in, or execute them immediately if the deferred has already been resolved or rejected.</p>
 
-<p>Simply Deferred is partially compatible with jQuery's API, so the <a href="http://api.jquery.com/category/deferred-object/">docs and usage</a> are the same, except that they're restricted to the following methods:</p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="title">storeCallbacks</span></span> = (shouldExecuteImmediately, holder) -&gt;
+      <span class="keyword">return</span> -&gt;
+        <span class="keyword">if</span> state <span class="keyword">is</span> PENDING <span class="keyword">then</span> holder.push (flatten arguments)...
+        <span class="keyword">if</span> shouldExecuteImmediately() <span class="keyword">then</span> execute arguments, closingArguments
+        <span class="keyword">return</span> candidate</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Now we can add success / resolution callbacks using <code>.done(callback)</code>,</p>
 
-<ul>
-<li><code>Deferred()</code></li>
-<li><code>deferred.state()</code></li>
-<li><code>deferred.done()</code></li>
-<li><code>deferred.fail()</code></li>
-<li><code>deferred.always()</code></li>
-<li><code>deferred.promise()</code></li>
-<li><code>deferred.resolve()</code></li>
-<li><code>deferred.resolveWith()</code></li>
-<li><code>deferred.rejectWith()</code></li>
-<li><code>deferred.reject()</code></li>
-<li><code>deferred.pipe()</code></li>
-<li><code>deferred.then()</code></li>
-<li><code>when()</code></li>
-</ul><h3>Usage with Zepto</h3>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    candidate.done = storeCallbacks((-&gt; state <span class="keyword">is</span> RESOLVED), doneCallbacks)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>or failure callbacks using <code>.fail(callback)</code>,</p>
 
-<p>Simply Deffered also acts as a plugin to <a href="http://zeptojs.com/">Zepto</a>. The absence of a Deferred library was one of the biggest reasons I've been holding back, so I thought it made sense to write one. Once you have both Zepto and Simply Deferred on your page, just do <code>Deferred.installInto(Zepto)</code> to set it up. The installation makes the following changes to bring it closer to jQuery:</p>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    candidate.fail = storeCallbacks((-&gt; state <span class="keyword">is</span> REJECTED), failCallbacks)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>or register a callback to always fire when the deferred is either resolved or rejected - using <code>.always(callback)</code></p>
 
-<ul>
-<li>Aliases the <code>Deferred</code> constructor to <code>$.Deferred</code>.</li>
-<li>Aliases the <code>when</code> method to <code>$.when</code>.</li>
-<li>Wraps <code>$.ajax</code> to return a <code>promise</code>, which has only the following methods: <code>state()</code>, <code>done()</code>, <code>fail()</code> and <code>always()</code>. The arguments passed to the <code>done</code> and <code>fail</code> callbacks are the same ones passed to the <code>success</code> and <code>error</code> options.</li>
-</ul>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/sudhirj">sudhirj</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
-    </div>
-    <script src="javascripts/scale.fix.js"></script>
-              <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-27684561-2");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    candidate.always = storeCallbacks((-&gt; state <span class="keyword">isnt</span> PENDING), alwaysCallbacks)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods. 
+Quite useful if you want to transform the results of a promise or log them in some way. </p>
 
-  </body>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="title">pipe</span></span> = (doneFilter, failFilter) -&gt;                        
+      deferred = <span class="keyword">new</span> Deferred()
+      <span class="function"><span class="title">filter</span></span> = (target, source, filter) -&gt;
+        <span class="keyword">if</span> filter <span class="keyword">then</span> target -&gt; source filter (flatten arguments)...
+        <span class="keyword">else</span> target -&gt; source (flatten arguments)...
+      filter candidate.done, deferred.resolve, doneFilter
+      filter candidate.fail, deferred.reject, failFilter
+      deferred</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Expose the <code>.pipe(doneFilter, failFilter)</code> method and alias it to <code>.then()</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    candidate.pipe = pipe
+    candidate.<span class="keyword">then</span> = pipe
+
+    <span class="keyword">return</span> candidate</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Since we now have a way to create all the public methods that this deferred needs on a candidate object, let&#39;s use it to create them on itself.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="property">@promise</span> <span class="keyword">this</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Moving to the methods that exist only on the deferred object itself, 
+let&#39;s create a generic closing function that stores the final resolution / rejection arguments for future callbacks;
+and then runs all the callbacks that have already been set. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="function"><span class="title">close</span></span> = (finalState, callbacks, context) -&gt;
+    <span class="keyword">return</span> -&gt;
+      <span class="keyword">if</span> state <span class="keyword">is</span> PENDING
+        state = finalState
+        closingArguments = arguments
+        execute [callbacks, alwaysCallbacks], closingArguments, context
+      <span class="keyword">return</span> <span class="keyword">this</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Now we can set up <code>.resolve([args])</code> method to close the deferred and call the <code>done</code> callbacks,</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="property">@resolve</span> = close RESOLVED, doneCallbacks</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>and <code>.reject([args])</code> to fail it and call the <code>fail</code> callbacks.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="property">@reject</span> = close REJECTED, failCallbacks</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>We can also set up <code>.resolveWith(context, [args])</code> and <code>.rejectWith(context, [args])</code> to allow setting an execution scope for the callbacks.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="property">@resolveWith</span> = (context, args...) -&gt; close(RESOLVED, doneCallbacks, context)(args...)
+  <span class="property">@rejectWith</span> = (context, args...) -&gt; close(REJECTED, failCallbacks, context)(args...)
+
+  <span class="keyword">return</span> <span class="keyword">this</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>If we&#39;re dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail). 
+Let&#39;s set up a <code>.when([deferreds])</code> method to do that. It should be able to take any number or deferreds as arguments (or an array of them).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">_when</span></span> = -&gt;
+  trigger = <span class="keyword">new</span> Deferred()
+  defs = flatten arguments
+  finish = after defs.length, trigger.resolve
+  def.done(finish) <span class="keyword">for</span> def <span class="keyword">in</span> defs
+  def.fail(-&gt; trigger.reject()) <span class="keyword">for</span> def <span class="keyword">in</span> defs
+  trigger.promise()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Since the core team of <a href="http://zeptojs.com/">Zepto</a> (and maybe other jQuery compatible libraries) don&#39;t seem to like the idea of Deferreds / Promises too much, 
+let&#39;s put in an easy way to install this library into Zetpo.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">installInto</span></span> = (fw) -&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>Add the <code>.Deferred()</code> constructor on to the framework. </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  fw.<span class="function"><span class="title">Deferred</span></span> = -&gt; <span class="keyword">new</span> Deferred()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>And wrap the <code>.ajax()</code> method to return a promise instead.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  fw.ajax = wrap fw.ajax, (ajax, options = {}) -&gt;
+    def = <span class="keyword">new</span> Deferred()
+
+    <span class="function"><span class="title">createWrapper</span></span> = (wrapped, finisher) -&gt;
+      <span class="keyword">return</span> wrap wrapped, (func, args...) -&gt;
+        func(args...) <span class="keyword">if</span> func
+        finisher(args...)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>This should let us do <code>request.done(callback)</code> instead of passing callbacks in to the options hash. 
+Also lets us add as many callbacks as we need at any point in the code.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    options.success = createWrapper options.success, def.resolve</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>Rinse and repeat for errors. We can now use <code>request.fail(callback)</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    options.error = createWrapper options.error, def.reject
+
+    ajax(options)
+
+    def.promise()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>Let&#39;s also alias the <code>.when()</code> method, for good measure.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  fw.<span class="keyword">when</span> = _<span class="keyword">when</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Finally, let&#39;s support node by exporting the intersting stuff</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">if</span> (<span class="keyword">typeof</span> exports <span class="keyword">isnt</span> <span class="string">'undefined'</span>)
+  exports.<span class="function"><span class="title">Deferred</span></span> = -&gt; <span class="keyword">new</span> Deferred()
+  exports.<span class="keyword">when</span> = _<span class="keyword">when</span>
+  exports.installInto = installInto
+<span class="keyword">else</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>and the browser by setting the functions on <code>window</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">this</span>.<span class="function"><span class="title">Deferred</span></span> = -&gt; <span class="keyword">new</span> Deferred();
+  <span class="keyword">this</span>.Deferred.<span class="keyword">when</span> = _<span class="keyword">when</span>
+  <span class="keyword">this</span>.Deferred.installInto = installInto</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>That&#39;s all, folks. The End.</p>
+
+            </div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
 </html>
