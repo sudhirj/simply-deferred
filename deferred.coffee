@@ -144,9 +144,14 @@ installInto = (fw) ->
     # Rinse and repeat for errors. We can now use `request.fail(callback)`.
     options.error = createWrapper options.error, def.reject
 
-    ajax(options)
+    xhr = ajax(options)
 
-    def.promise()
+    promise = def.promise()
+    promise.abort = ->
+      xhr.abort()
+      options.error xhr, 'abort', 'abort'
+
+    promise
   # Let's also alias the `.when()` method, for good measure.
   fw.when = _when
 
