@@ -122,7 +122,7 @@ _when = ->
   defs = flatten arguments
   finish = after defs.length, trigger.resolve
   def.done(finish) for def in defs
-  def.fail(-> trigger.reject()) for def in defs
+  def.fail(trigger.reject) for def in defs
   trigger.promise()
 
 # Since the core team of [Zepto](http://zeptojs.com/) (and maybe other jQuery compatible libraries) don't seem to like the idea of Deferreds / Promises too much, 
