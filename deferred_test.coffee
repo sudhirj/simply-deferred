@@ -195,6 +195,17 @@ describe 'deferred', ->
         d2.reject()
         assert.equal after_all.state(), 'rejected'
 
+      it 'should pass on reject arguments', (done) -> 
+        d1 = new deferred.Deferred()
+        d2 = new deferred.Deferred()
+        after_all = deferred.when(d1, d2)
+        after_all.fail (arg1) -> done() if arg1 is 42
+        d1.resolve()
+        d2.reject 42
+
+
+
+
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
     it 'should install .Deferred', ->

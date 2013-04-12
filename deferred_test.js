@@ -253,7 +253,7 @@
           d2.resolve();
           return assert.equal(after_all.state(), 'resolved');
         });
-        return it('should reject when there are some failures', function() {
+        it('should reject when there are some failures', function() {
           var after_all, d1, d2;
           d1 = new deferred.Deferred();
           d2 = new deferred.Deferred();
@@ -262,6 +262,19 @@
           assert.equal(after_all.state(), 'pending');
           d2.reject();
           return assert.equal(after_all.state(), 'rejected');
+        });
+        return it('should pass on reject arguments', function(done) {
+          var after_all, d1, d2;
+          d1 = new deferred.Deferred();
+          d2 = new deferred.Deferred();
+          after_all = deferred.when(d1, d2);
+          after_all.fail(function(arg1) {
+            if (arg1 === 42) {
+              return done();
+            }
+          });
+          d1.resolve();
+          return d2.reject(42);
         });
       });
     });

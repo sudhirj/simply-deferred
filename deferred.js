@@ -157,9 +157,7 @@
     }
     for (_j = 0, _len1 = defs.length; _j < _len1; _j++) {
       def = defs[_j];
-      def.fail(function() {
-        return trigger.reject();
-      });
+      def.fail(trigger.reject);
     }
     return trigger.promise();
   };
