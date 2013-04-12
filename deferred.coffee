@@ -72,9 +72,7 @@ Deferred = ->
     # or failure callbacks using `.fail(callback)`,
     candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks)
     # or register a callback to always fire when the deferred is either resolved or rejected - using `.always(callback)`
-    candidate.always = ->
-      execute [candidate.done, candidate.fail], arguments 
-      return candidate
+    candidate.always = -> candidate.done(arguments...).fail(arguments...)      
 
     # It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods. 
     # Quite useful if you want to transform the results of a promise or log them in some way. 

@@ -66,11 +66,10 @@
   };
 
   Deferred = function() {
-    var alwaysCallbacks, close, closingArguments, doneCallbacks, failCallbacks, state;
+    var close, closingArguments, doneCallbacks, failCallbacks, state;
     state = PENDING;
     doneCallbacks = [];
     failCallbacks = [];
-    alwaysCallbacks = [];
     closingArguments = {};
     this.promise = function(candidate) {
       var pipe, storeCallbacks;
@@ -95,9 +94,10 @@
       candidate.fail = storeCallbacks((function() {
         return state === REJECTED;
       }), failCallbacks);
-      candidate.always = storeCallbacks((function() {
-        return state !== PENDING;
-      }), alwaysCallbacks);
+      candidate.always = function() {
+        var _ref;
+        return (_ref = candidate.done.apply(candidate, arguments)).fail.apply(_ref, arguments);
+      };
       pipe = function(doneFilter, failFilter) {
         var deferred, filter;
         deferred = new Deferred();
@@ -126,7 +126,7 @@
         if (state === PENDING) {
           state = finalState;
           closingArguments = arguments;
-          execute([callbacks, alwaysCallbacks], closingArguments, context);
+          execute(callbacks, closingArguments, context);
         }
         return this;
       };
