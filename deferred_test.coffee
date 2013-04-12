@@ -104,7 +104,7 @@ describe 'deferred', ->
     new deferred.Deferred().fail(callback).reject(42, 24).fail(callback)
 
   it 'should provide a when method', (done) ->
-    callback = _.after 4, done
+    callback = _.after 4, -> done()
     def1 = new deferred.Deferred().done callback
     def2 = new deferred.Deferred().done callback
     def3 = new deferred.Deferred().done callback
@@ -201,9 +201,27 @@ describe 'deferred', ->
         d1.resolve()
         d2.reject 42
 
+      it 'should pass on resolve arguments as is when used with a single deferred', (done) ->
+        d1 = new deferred.Deferred()        
+        after_all = deferred.when(d1)
+        after_all.done (arg1) -> done() if arg1 is 42
+        d1.resolve(42)
+      
+      it 'should pass on arrays of arguments when used with multiple deferreds', (done) ->
+        d1 = new deferred.Deferred()
+        d2 = new deferred.Deferred()
+        d3 = new deferred.Deferred()
+        after_all = deferred.when(d1, d2, d3)        
+        after_all.done (arg1, arg2, arg3) ->
+          assert.deepEqual arg1, [42]
+          assert.deepEqual arg2, []
+          assert.deepEqual arg3, ['abc', 123]
+          done()
 
-
-
+        d2.resolve()
+        d3.resolve('abc', 123)
+        d1.resolve(42)
+        
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
     it 'should install .Deferred', ->

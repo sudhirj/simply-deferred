@@ -143,7 +143,9 @@
     });
     it('should provide a when method', function(done) {
       var all, callback, def1, def2, def3;
-      callback = _.after(4, done);
+      callback = _.after(4, function() {
+        return done();
+      });
       def1 = new deferred.Deferred().done(callback);
       def2 = new deferred.Deferred().done(callback);
       def3 = new deferred.Deferred().done(callback);
@@ -262,7 +264,7 @@
           d2.reject();
           return assert.equal(after_all.state(), 'rejected');
         });
-        return it('should pass on reject arguments', function(done) {
+        it('should pass on reject arguments', function(done) {
           var after_all, d1, d2;
           d1 = new deferred.Deferred();
           d2 = new deferred.Deferred();
@@ -274,6 +276,33 @@
           });
           d1.resolve();
           return d2.reject(42);
+        });
+        it('should pass on resolve arguments as is when used with a single deferred', function(done) {
+          var after_all, d1;
+          d1 = new deferred.Deferred();
+          after_all = deferred.when(d1);
+          after_all.done(function(arg1) {
+            if (arg1 === 42) {
+              return done();
+            }
+          });
+          return d1.resolve(42);
+        });
+        return it('should pass on arrays of arguments when used with multiple deferreds', function(done) {
+          var after_all, d1, d2, d3;
+          d1 = new deferred.Deferred();
+          d2 = new deferred.Deferred();
+          d3 = new deferred.Deferred();
+          after_all = deferred.when(d1, d2, d3);
+          after_all.done(function(arg1, arg2, arg3) {
+            assert.deepEqual(arg1, [42]);
+            assert.deepEqual(arg2, []);
+            assert.deepEqual(arg3, ['abc', 123]);
+            return done();
+          });
+          d2.resolve();
+          d3.resolve('abc', 123);
+          return d1.resolve(42);
         });
       });
     });

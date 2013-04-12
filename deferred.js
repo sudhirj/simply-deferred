@@ -3,7 +3,7 @@
   var Deferred, PENDING, REJECTED, RESOLVED, VERSION, after, execute, flatten, has, installInto, isArguments, wrap, _when,
     __slice = [].slice;
 
-  VERSION = '1.3.2';
+  VERSION = '2.0.0';
 
   PENDING = "pending";
 
@@ -147,16 +147,29 @@
   };
 
   _when = function() {
-    var def, defs, finish, trigger, _i, _j, _len, _len1;
+    var def, defs, finish, resolutionArgs, trigger, _i, _len;
     trigger = new Deferred();
     defs = flatten(arguments);
-    finish = after(defs.length, trigger.resolve);
+    if (defs.length === 1) {
+      defs[0].done(function() {
+        return trigger.resolve.apply(trigger, arguments);
+      });
+    } else {
+      resolutionArgs = [];
+      finish = after(defs.length, function() {
+        return trigger.resolve.apply(trigger, resolutionArgs);
+      });
+      defs.forEach(function(def, index) {
+        return def.done(function() {
+          var args;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          resolutionArgs[index] = args;
+          return finish();
+        });
+      });
+    }
     for (_i = 0, _len = defs.length; _i < _len; _i++) {
       def = defs[_i];
-      def.done(finish);
-    }
-    for (_j = 0, _len1 = defs.length; _j < _len1; _j++) {
-      def = defs[_j];
       def.fail(trigger.reject);
     }
     return trigger.promise();

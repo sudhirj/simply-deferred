@@ -5,7 +5,7 @@
 # ####[Source (github)](http://github.com/sudhirj/simply-deferred) | [Documentation](https://github.com/sudhirj/simply-deferred#simply-deferred)
 # &copy; Sudhir Jonathan [sudhirjonathan.com](http://www.sudhirjonathan.com)
 
-VERSION = '1.3.2'
+VERSION = '2.0.0'
 
 # First, let's set up the constants that we'll need to signify the state of the `deferred` object. These will be returned from the `state()` method.
 
@@ -118,9 +118,17 @@ Deferred = ->
 # Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments (or an array of them).
 _when = ->
   trigger = new Deferred()
-  defs = flatten arguments
-  finish = after defs.length, trigger.resolve
-  def.done(finish) for def in defs
+  defs = flatten arguments    
+  if defs.length == 1
+    defs[0].done -> trigger.resolve arguments...
+  else
+    resolutionArgs = []
+    finish = after defs.length, -> trigger.resolve(resolutionArgs...)
+    defs.forEach (def, index) ->    
+      def.done (args...) ->        
+        resolutionArgs[index] = args        
+        finish()
+  
   def.fail(trigger.reject) for def in defs
   trigger.promise()
 
