@@ -52,7 +52,6 @@ Deferred = ->
   state = PENDING
   doneCallbacks = []
   failCallbacks = []
-  alwaysCallbacks = []
   closingArguments = {}
   # Calling `.promise()` gives you an object that you pass around your code indiscriminately. 
   # Any code can add callbacks to a `promise`, but none can alter the state of the `deferred` itself. 
@@ -73,7 +72,9 @@ Deferred = ->
     # or failure callbacks using `.fail(callback)`,
     candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks)
     # or register a callback to always fire when the deferred is either resolved or rejected - using `.always(callback)`
-    candidate.always = storeCallbacks((-> state isnt PENDING), alwaysCallbacks)
+    candidate.always = ->
+      execute [candidate.done, candidate.fail], arguments 
+      return candidate
 
     # It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods. 
     # Quite useful if you want to transform the results of a promise or log them in some way. 
@@ -103,7 +104,7 @@ Deferred = ->
       if state is PENDING
         state = finalState
         closingArguments = arguments
-        execute [callbacks, alwaysCallbacks], closingArguments, context
+        execute callbacks, closingArguments, context
       return this
   # Now we can set up `.resolve([args])` method to close the deferred and call the `done` callbacks,
   @resolve = close RESOLVED, doneCallbacks
