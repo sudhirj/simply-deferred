@@ -167,7 +167,7 @@
       return new Deferred();
     };
     fw.ajax = wrap(fw.ajax, function(ajax, options) {
-      var createWrapper, def;
+      var createWrapper, def, promise, xhr;
       if (options == null) {
         options = {};
       }
@@ -184,8 +184,12 @@
       };
       options.success = createWrapper(options.success, def.resolve);
       options.error = createWrapper(options.error, def.reject);
-      ajax(options);
-      return def.promise();
+      xhr = ajax(options);
+      promise = def.promise();
+      promise.abort = function() {
+        return xhr.abort();
+      };
+      return promise;
     });
     return fw.when = _when;
   };

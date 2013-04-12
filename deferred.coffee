@@ -146,11 +146,11 @@ installInto = (fw) ->
     xhr = ajax(options)
 
     promise = def.promise()
-    promise.abort = ->
-      xhr.abort()
-      options.error xhr, 'abort', 'abort'
-
+    # Provide an abort method to cancel the ongoing request.
+    promise.abort = -> xhr.abort()      
+    
     promise
+
   # Let's also alias the `.when()` method, for good measure.
   fw.when = _when
 

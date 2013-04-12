@@ -22,7 +22,6 @@
   };
 
   assertIsPromise = function(promise) {
-    assert.equal(_.keys(promise).length, expectedMethods.length);
     return assertHasPromiseApi(promise);
   };
 
@@ -325,6 +324,20 @@
         return promise.fail(function() {
           return fail();
         });
+      });
+      it('should provide an abort mechanism', function(done) {
+        var promise, zepto;
+        zepto = {};
+        zepto.ajax = function(options) {
+          return {
+            abort: function() {
+              return done();
+            }
+          };
+        };
+        deferred.installInto(zepto);
+        promise = zepto.ajax();
+        return promise.abort();
       });
       it('should reject on failure', function(done) {
         var callback, error, promise, zepto;

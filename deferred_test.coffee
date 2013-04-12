@@ -5,9 +5,7 @@ _ = require 'underscore'
 
 expectedMethods = ['done', 'fail', 'always', 'state', 'then', 'pipe']
 assertHasPromiseApi = (promise) -> assert _.has(promise, method) for method in expectedMethods
-assertIsPromise = (promise) ->
-  assert.equal _.keys(promise).length, expectedMethods.length
-  assertHasPromiseApi promise
+assertIsPromise = (promise) -> assertHasPromiseApi promise
 
 describe 'deferred', ->
   it 'should create and return a deferred object', ->
@@ -236,6 +234,16 @@ describe 'deferred', ->
       promise.done success
       promise.always success
       promise.fail -> fail()
+
+    it 'should provide an abort mechanism', (done) ->
+      zepto = {}
+      zepto.ajax = (options) -> {
+        abort: -> done()
+      }
+      deferred.installInto zepto
+      promise = zepto.ajax()
+      promise.abort()
+
 
     it 'should reject on failure', (done) ->
       callback = _.after 3, done
