@@ -4,8 +4,6 @@
 ##Installation
     npm install simply-deferred
 
-If you're on a browser, simply include 
-    https://raw.github.com/sudhirj/simply-deferred/master/deferred.min.js
 
 ##Usage
     var Deferred = require('simply-deferred').Deferred;    
