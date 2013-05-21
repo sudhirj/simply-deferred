@@ -39,3 +39,11 @@ Simply Deffered also acts as a plugin to [Zepto](http://zeptojs.com/). The absen
 * Aliases the `Deferred` constructor to `$.Deferred`.
 * Aliases the `when` method to `$.when`.
 * Wraps `$.ajax` to return a `promise`, which has only the following methods: `state()`, `done()`, `fail()` and `always()`. The arguments passed to the `done` and `fail` callbacks are the same ones passed to the `success` and `error` options.
+
+###Collaborating
+Please feel free to raise issues on github.com/sudhirj/simply-deferred/issues - both obvious bugs or incompatibilities with jQuery are welcome.
+
+If you'd like contribute a fix or a feature, that would be even better. Please make sure all pull requests are accompanied by tests, though. 
+
+If you'd like to start work on a feature that is not part of the jQuery library, let's talk about it first - the goal here for this library to be a drop in replacement for jQuery, with the same docs and API.
+
