@@ -7,7 +7,6 @@
 
 VERSION = '2.0.0'
 
-IDENTIFIER = "SD-#{VERSION}"
 # First, let's set up the constants that we'll need to signify the state of the `deferred` object. These will be returned from the `state()` method.
 
 PENDING = "pending"
