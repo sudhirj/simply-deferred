@@ -1,0 +1,6 @@
+#!/bin/sh
+
+curl https://raw.github.com/sudhirj/simply-deferred/master/deferred.coffee -o index.coffee
+docco index.coffee -o .
+rm index.coffee
+

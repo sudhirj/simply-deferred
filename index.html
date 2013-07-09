@@ -30,7 +30,7 @@
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>VERSION = <span class="string">'1.3.2'</span></pre></div></div>
+            <div class="content"><div class='highlight'><pre>VERSION = <span class="string">'2.0.0'</span></pre></div></div>
             
         </li>
         
@@ -200,7 +200,6 @@ flatten argument arrays,</p>
             <div class="content"><div class='highlight'><pre>  state = PENDING
   doneCallbacks = []
   failCallbacks = []
-  alwaysCallbacks = []
   closingArguments = {}</pre></div></div>
             
         </li>
@@ -298,7 +297,7 @@ You can also transform any candidate object into a promise for this particular d
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    candidate.always = storeCallbacks((-&gt; state <span class="keyword">isnt</span> PENDING), alwaysCallbacks)</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    candidate.<span class="function"><span class="title">always</span></span> = -&gt; candidate.done(arguments...).fail(arguments...)</pre></div></div>
             
         </li>
         
@@ -376,7 +375,7 @@ and then runs all the callbacks that have already been set. </p>
       <span class="keyword">if</span> state <span class="keyword">is</span> PENDING
         state = finalState
         closingArguments = arguments
-        execute [callbacks, alwaysCallbacks], closingArguments, context
+        execute callbacks, closingArguments, context
       <span class="keyword">return</span> <span class="keyword">this</span></pre></div></div>
             
         </li>
@@ -443,10 +442,18 @@ Let&#39;s set up a <code>.when([deferreds])</code> method to do that. It should 
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="title">_when</span></span> = -&gt;
   trigger = <span class="keyword">new</span> Deferred()
-  defs = flatten arguments
-  finish = after defs.length, trigger.resolve
-  def.done(finish) <span class="keyword">for</span> def <span class="keyword">in</span> defs
-  def.fail(-&gt; trigger.reject()) <span class="keyword">for</span> def <span class="keyword">in</span> defs
+  defs = flatten arguments    
+  <span class="keyword">if</span> defs.length == <span class="number">1</span>
+    defs[<span class="number">0</span>].done -&gt; trigger.resolve arguments...
+  <span class="keyword">else</span>
+    resolutionArgs = []
+    finish = after defs.length, -&gt; trigger.resolve(resolutionArgs...)
+    defs.forEach (def, index) -&gt;    
+      def.done (args...) -&gt;        
+        resolutionArgs[index] = args        
+        finish()
+  
+  def.fail(trigger.reject) <span class="keyword">for</span> def <span class="keyword">in</span> defs
   trigger.promise()</pre></div></div>
             
         </li>
@@ -532,9 +539,9 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
             
             <div class="content"><div class='highlight'><pre>    options.error = createWrapper options.error, def.reject
 
-    ajax(options)
+    xhr = ajax(options)
 
-    def.promise()</pre></div></div>
+    promise = def.promise()</pre></div></div>
             
         </li>
         
@@ -545,11 +552,13 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-31">&#182;</a>
               </div>
-              <p>Let&#39;s also alias the <code>.when()</code> method, for good measure.</p>
+              <p>Provide an abort method to cancel the ongoing request.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  fw.<span class="keyword">when</span> = _<span class="keyword">when</span></pre></div></div>
+            <div class="content"><div class='highlight'><pre>    promise.<span class="function"><span class="title">abort</span></span> = -&gt; xhr.abort()      
+    
+    promise</pre></div></div>
             
         </li>
         
@@ -559,6 +568,21 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Let&#39;s also alias the <code>.when()</code> method, for good measure.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  fw.<span class="keyword">when</span> = _<span class="keyword">when</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
               </div>
               <p>Finally, let&#39;s support node by exporting the intersting stuff</p>
 
@@ -573,11 +597,11 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-33">
+        <li id="section-34">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-33">&#182;</a>
+                <a class="pilcrow" href="#section-34">&#182;</a>
               </div>
               <p>and the browser by setting the functions on <code>window</code>.</p>
 
@@ -590,11 +614,11 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-34">
+        <li id="section-35">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-34">&#182;</a>
+                <a class="pilcrow" href="#section-35">&#182;</a>
               </div>
               <p>That&#39;s all, folks. The End.</p>
 
