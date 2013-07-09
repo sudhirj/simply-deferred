@@ -7,32 +7,33 @@
 
 VERSION = '2.0.0'
 
+IDENTIFIER = "SD-#{VERSION}"
 # First, let's set up the constants that we'll need to signify the state of the `deferred` object. These will be returned from the `state()` method.
 
 PENDING = "pending"
 RESOLVED = "resolved"
 REJECTED = "rejected"
 
-# `has` and `isArguments` are both workarounds for JS quirks. We use them only to flatten arrays. 
+# `has` and `isArguments` are both workarounds for JS quirks. We use them only to flatten arrays.
 
-# `has` checks if an object natively owns a particular property, 
+# `has` checks if an object natively owns a particular property,
 has = (obj, prop) -> obj?.hasOwnProperty prop
 # while `isArguments` checks if the given object is a method arguments object (like an array, but not quite).
 isArguments = (obj) -> return has(obj, 'length') and has(obj, 'callee')
 
-# Borrowed from the incredibly useful [underscore.js](http://underscorejs.org/), these three utilities help 
+# Borrowed from the incredibly useful [underscore.js](http://underscorejs.org/), these three utilities help
 # flatten argument arrays,
 flatten = (array) ->
   return flatten Array.prototype.slice.call(array) if isArguments array
   return [array] if not Array.isArray array
   # > `reduce` requires a modern JS interpreter, or a shim.
-  return array.reduce (memo, value) ->    
+  return array.reduce (memo, value) ->
     return memo.concat flatten value if Array.isArray(value)
     memo.push value
     return memo
   , []
 
-# call functions only after they've been invoked a certain number of times, 
+# call functions only after they've been invoked a certain number of times,
 after = (times, func) ->
   return func() if times <= 0
   return -> func.apply(this, arguments) if --times < 1
@@ -46,15 +47,16 @@ wrap = (func, wrapper) ->
 # Now we'll need a general callback executor, with optional control over the execution context.
 execute = (callbacks, args, context) -> callback.call(context, args...) for callback in flatten callbacks
 
-# Let's start with the Deferred object constructor - it needs no arguments 
+# Let's start with the Deferred object constructor - it needs no arguments
 Deferred = ->
+  @isPromise = -> true
   # and all `deferred` objects are in a `'pending'` state when initialized.
   state = PENDING
   doneCallbacks = []
   failCallbacks = []
   closingArguments = {}
-  # Calling `.promise()` gives you an object that you pass around your code indiscriminately. 
-  # Any code can add callbacks to a `promise`, but none can alter the state of the `deferred` itself. 
+  # Calling `.promise()` gives you an object that you pass around your code indiscriminately.
+  # Any code can add callbacks to a `promise`, but none can alter the state of the `deferred` itself.
   # You can also transform any candidate object into a promise for this particular deferred object by passing it in.
   @promise = (candidate) ->
     candidate = candidate || {}
@@ -72,17 +74,24 @@ Deferred = ->
     # or failure callbacks using `.fail(callback)`,
     candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks)
     # or register a callback to always fire when the deferred is either resolved or rejected - using `.always(callback)`
-    candidate.always = -> candidate.done(arguments...).fail(arguments...)      
+    candidate.always = -> candidate.done(arguments...).fail(arguments...)
 
-    # It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods. 
-    # Quite useful if you want to transform the results of a promise or log them in some way. 
-    pipe = (doneFilter, failFilter) ->                        
+    # It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods.
+    # Quite useful if you want to transform the results of a promise or log them in some way.
+    pipe = (doneFilter, failFilter) ->
       deferred = new Deferred()
-      filter = (target, source, filter) ->
-        if filter then target -> source filter (flatten arguments)...
-        else target -> source (flatten arguments)...
-      filter candidate.done, deferred.resolve, doneFilter
-      filter candidate.fail, deferred.reject, failFilter
+      filter = (source, destination, filter) ->
+        if filter then candidate[source] (args...) ->
+          filteredArgs = filter args...
+          # Some pipes might want to return another promise, though, so let's check if the object is a promise and resolve it correctly if it is.
+          if has(filteredArgs, 'isPromise') and filteredArgs.isPromise()
+            filteredArgs[source] (args...) -> destination args...
+          # Otherwise we can just send the filtered values onward.
+          else destination(filteredArgs)
+        # If no filters have been passed, this degenerates into a shortcut method for adding both `done` and `fail` callbacks.
+        else candidate[source] (args...) -> destination args...
+      filter 'done', deferred.resolve, doneFilter
+      filter 'fail', deferred.reject, failFilter
       deferred
 
     # Expose the `.pipe(doneFilter, failFilter)` method and alias it to `.then()`.
@@ -94,9 +103,9 @@ Deferred = ->
   # Since we now have a way to create all the public methods that this deferred needs on a candidate object, let's use it to create them on itself.
   @promise this
 
-  # Moving to the methods that exist only on the deferred object itself, 
+  # Moving to the methods that exist only on the deferred object itself,
   # let's create a generic closing function that stores the final resolution / rejection arguments for future callbacks;
-  # and then runs all the callbacks that have already been set. 
+  # and then runs all the callbacks that have already been set.
   close = (finalState, callbacks, context) ->
     return ->
       if state is PENDING
@@ -113,29 +122,29 @@ Deferred = ->
   @rejectWith = (context, args...) -> close(REJECTED, failCallbacks, context)(args...)
 
   return this
- 
-# If we're dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail). 
+
+# If we're dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail).
 # Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments (or an array of them).
 _when = ->
   trigger = new Deferred()
-  defs = flatten arguments    
+  defs = flatten arguments
   if defs.length == 1
     defs[0].done -> trigger.resolve arguments...
   else
     resolutionArgs = []
     finish = after defs.length, -> trigger.resolve(resolutionArgs...)
-    defs.forEach (def, index) ->    
-      def.done (args...) ->        
-        resolutionArgs[index] = args        
+    defs.forEach (def, index) ->
+      def.done (args...) ->
+        resolutionArgs[index] = args
         finish()
-  
+
   def.fail(trigger.reject) for def in defs
   trigger.promise()
 
-# Since the core team of [Zepto](http://zeptojs.com/) (and maybe other jQuery compatible libraries) don't seem to like the idea of Deferreds / Promises too much, 
+# Since the core team of [Zepto](http://zeptojs.com/) (and maybe other jQuery compatible libraries) don't seem to like the idea of Deferreds / Promises too much,
 # let's put in an easy way to install this library into Zetpo.
 installInto = (fw) ->
-  # Add the `.Deferred()` constructor on to the framework. 
+  # Add the `.Deferred()` constructor on to the framework.
   fw.Deferred = -> new Deferred()
   # And wrap the `.ajax()` method to return a promise instead.
   fw.ajax = wrap fw.ajax, (ajax, options = {}) ->
@@ -145,7 +154,7 @@ installInto = (fw) ->
       return wrap wrapped, (func, args...) ->
         func(args...) if func
         finisher(args...)
-    # This should let us do `request.done(callback)` instead of passing callbacks in to the options hash. 
+    # This should let us do `request.done(callback)` instead of passing callbacks in to the options hash.
     # Also lets us add as many callbacks as we need at any point in the code.
     options.success = createWrapper options.success, def.resolve
     # Rinse and repeat for errors. We can now use `request.fail(callback)`.
@@ -155,8 +164,8 @@ installInto = (fw) ->
 
     promise = def.promise()
     # Provide an abort method to cancel the ongoing request.
-    promise.abort = -> xhr.abort()      
-    
+    promise.abort = -> xhr.abort()
+
     promise
 
   # Let's also alias the `.when()` method, for good measure.

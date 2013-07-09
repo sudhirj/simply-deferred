@@ -47,7 +47,7 @@ describe 'deferred', ->
     callback = _.after 2, done
     def = new deferred.Deferred()
     finishHolder = {finisher: callback}
-    finish = (arg1) -> 
+    finish = (arg1) ->
       assert.equal(42, arg1)
       @finisher()
     def.done finish
@@ -55,11 +55,11 @@ describe 'deferred', ->
     def.resolveWith(finishHolder, 42)
     assert.equal def.state(), 'resolved'
 
-  it 'should scope fail callbacks when using rejectWith', (done) -> 
+  it 'should scope fail callbacks when using rejectWith', (done) ->
     callback = _.after 2, done
     def = new deferred.Deferred()
     finishHolder = {finisher: callback}
-    finish = (arg1) -> 
+    finish = (arg1) ->
       assert.equal(42, arg1)
       @finisher()
     def.fail finish
@@ -113,7 +113,7 @@ describe 'deferred', ->
     def2.resolve()
     def3.resolve()
 
-  describe 'pipe', ->        
+  describe 'pipe', ->
     it 'should pipe on resolution', (done) ->
       finisher = (value) -> if value is 10 then done()
       def = new deferred.Deferred()
@@ -126,21 +126,52 @@ describe 'deferred', ->
       def = new deferred.Deferred()
       filtered = def.pipe null, (value) -> value * 3
       def.reject 2
-      filtered.fail finisher            
+      filtered.fail finisher
 
-    it 'should pass through for null filters for done', (done) -> 
+    it 'should pipe with arrays intact', (done) ->
+      finisher = (value) ->
+        if value.length is [1,2,3].length then done()
+      def = new deferred.Deferred()
+      filtered = def.pipe null, (value) ->
+        value.push(3)
+        value
+      def.reject([1,2])
+      filtered.fail finisher
+
+    it 'should pass through for null filters for done', (done) ->
       finisher = (value) -> if value is 5 then done()
       def = new deferred.Deferred()
       filtered = def.pipe(null, null)
       def.resolve 5
       filtered.done finisher
-    
-    it 'should pass through for null filters for fail', (done) -> 
+
+    it 'should pass through for null filters for fail', (done) ->
       finisher = (value) -> if value is 5 then done()
       def = new deferred.Deferred()
       filtered = def.pipe(null, null)
       def.reject 5
       filtered.fail finisher
+
+    it 'should accept promises from filters and call them later with arguments', (done) ->
+      def = deferred.Deferred()
+
+      filter = (result) ->
+        assert.equal result, 'r1'
+        def2 = deferred.Deferred()
+        setTimeout (-> def2.resolve('r2')), 100
+        def2
+
+      def.then(filter).done (result) ->
+        assert.equal result, 'r2'
+        done() if result is 'r2'
+
+      def.resolve('r1')
+
+
+
+
+
+
 
   describe 'then', ->
     it 'should alias pipe', ->
@@ -160,9 +191,9 @@ describe 'deferred', ->
       assertIsPromise promise.fail callback
       assertIsPromise promise.always callback
 
-      assert "pending", promise.state()
+      assert.equal "pending", promise.state()
       def.resolve()
-      assert "resolved", promise.state()
+      assert.equal "resolved", promise.state()
 
     it 'should create a promise out of a given object', ->
       candidate = {id: 42}
@@ -193,7 +224,7 @@ describe 'deferred', ->
         d2.reject()
         assert.equal after_all.state(), 'rejected'
 
-      it 'should pass on reject arguments', (done) -> 
+      it 'should pass on reject arguments', (done) ->
         d1 = new deferred.Deferred()
         d2 = new deferred.Deferred()
         after_all = deferred.when(d1, d2)
@@ -202,16 +233,16 @@ describe 'deferred', ->
         d2.reject 42
 
       it 'should pass on resolve arguments as is when used with a single deferred', (done) ->
-        d1 = new deferred.Deferred()        
+        d1 = new deferred.Deferred()
         after_all = deferred.when(d1)
         after_all.done (arg1) -> done() if arg1 is 42
         d1.resolve(42)
-      
+
       it 'should pass on arrays of arguments when used with multiple deferreds', (done) ->
         d1 = new deferred.Deferred()
         d2 = new deferred.Deferred()
         d3 = new deferred.Deferred()
-        after_all = deferred.when(d1, d2, d3)        
+        after_all = deferred.when(d1, d2, d3)
         after_all.done (arg1, arg2, arg3) ->
           assert.deepEqual arg1, [42]
           assert.deepEqual arg2, []
@@ -221,7 +252,7 @@ describe 'deferred', ->
         d2.resolve()
         d3.resolve('abc', 123)
         d1.resolve(42)
-        
+
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
     it 'should install .Deferred', ->
