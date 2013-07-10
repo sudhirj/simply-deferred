@@ -30,7 +30,7 @@
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>VERSION = <span class="string">'2.0.0'</span></pre></div></div>
+            <div class="content"><div class='highlight'><pre>VERSION = <span class="string">'2.1.0'</span></pre></div></div>
             
         </li>
         
@@ -58,8 +58,8 @@ REJECTED = <span class="string">"rejected"</span></pre></div></div>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
-              <p><code>has</code> and <code>isArguments</code> are both workarounds for JS quirks. We use them only to flatten arrays. </p>
-<p><code>has</code> checks if an object natively owns a particular property, </p>
+              <p><code>has</code> and <code>isArguments</code> are both workarounds for JS quirks. We use them only to flatten arrays.</p>
+<p><code>has</code> checks if an object natively owns a particular property,</p>
 
             </div>
             
@@ -89,7 +89,7 @@ REJECTED = <span class="string">"rejected"</span></pre></div></div>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
-              <p>Borrowed from the incredibly useful <a href="http://underscorejs.org/">underscore.js</a>, these three utilities help 
+              <p>Borrowed from the incredibly useful <a href="http://underscorejs.org/">underscore.js</a>, these three utilities help
 flatten argument arrays,</p>
 
             </div>
@@ -113,7 +113,7 @@ flatten argument arrays,</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  <span class="keyword">return</span> array.reduce (memo, value) -&gt;    
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">return</span> array.reduce (memo, value) -&gt;
     <span class="keyword">return</span> memo.concat flatten value <span class="keyword">if</span> Array.isArray(value)
     memo.push value
     <span class="keyword">return</span> memo
@@ -128,7 +128,7 @@ flatten argument arrays,</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
-              <p>call functions only after they&#39;ve been invoked a certain number of times, </p>
+              <p>call functions only after they&#39;ve been invoked a certain number of times,</p>
 
             </div>
             
@@ -178,11 +178,12 @@ flatten argument arrays,</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
-              <p>Let&#39;s start with the Deferred object constructor - it needs no arguments </p>
+              <p>Let&#39;s start with the Deferred object constructor - it needs no arguments</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">Deferred</span></span> = -&gt;</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="title">Deferred</span></span> = -&gt;
+  <span class="property">@isPromise</span> = -&gt; <span class="literal">true</span></pre></div></div>
             
         </li>
         
@@ -211,8 +212,8 @@ flatten argument arrays,</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
-              <p>Calling <code>.promise()</code> gives you an object that you pass around your code indiscriminately. 
-Any code can add callbacks to a <code>promise</code>, but none can alter the state of the <code>deferred</code> itself. 
+              <p>Calling <code>.promise()</code> gives you an object that you pass around your code indiscriminately.
+Any code can add callbacks to a <code>promise</code>, but none can alter the state of the <code>deferred</code> itself.
 You can also transform any candidate object into a promise for this particular deferred object by passing it in.</p>
 
             </div>
@@ -308,19 +309,16 @@ You can also transform any candidate object into a promise for this particular d
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-18">&#182;</a>
               </div>
-              <p>It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods. 
-Quite useful if you want to transform the results of a promise or log them in some way. </p>
+              <p>It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods.
+Quite useful if you want to transform the results of a promise or log them in some way.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="title">pipe</span></span> = (doneFilter, failFilter) -&gt;                        
+            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="title">pipe</span></span> = (doneFilter, failFilter) -&gt;
       deferred = <span class="keyword">new</span> Deferred()
-      <span class="function"><span class="title">filter</span></span> = (target, source, filter) -&gt;
-        <span class="keyword">if</span> filter <span class="keyword">then</span> target -&gt; source filter (flatten arguments)...
-        <span class="keyword">else</span> target -&gt; source (flatten arguments)...
-      filter candidate.done, deferred.resolve, doneFilter
-      filter candidate.fail, deferred.reject, failFilter
-      deferred</pre></div></div>
+      <span class="function"><span class="title">filter</span></span> = (source, destination, filter) -&gt;
+        <span class="keyword">if</span> filter <span class="keyword">then</span> candidate[source] (args...) -&gt;
+          filteredArgs = filter args...</pre></div></div>
             
         </li>
         
@@ -330,6 +328,55 @@ Quite useful if you want to transform the results of a promise or log them in so
               
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Some pipes might want to return another promise, though, so let&#39;s check if the object is a promise and resolve it correctly if it is.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="keyword">if</span> has(filteredArgs, <span class="string">'isPromise'</span>) <span class="keyword">and</span> filteredArgs.isPromise()
+            filteredArgs[source] (args...) -&gt; destination args...</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Otherwise we can just send the filtered values onward.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="keyword">else</span> destination(filteredArgs)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>If no filters have been passed, this degenerates into a shortcut method for adding both <code>done</code> and <code>fail</code> callbacks.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">else</span> candidate[source] (args...) -&gt; destination args...
+      filter <span class="string">'done'</span>, deferred.resolve, doneFilter
+      filter <span class="string">'fail'</span>, deferred.reject, failFilter
+      deferred</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
               </div>
               <p>Expose the <code>.pipe(doneFilter, failFilter)</code> method and alias it to <code>.then()</code>.</p>
 
@@ -343,11 +390,11 @@ Quite useful if you want to transform the results of a promise or log them in so
         </li>
         
         
-        <li id="section-20">
+        <li id="section-23">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-20">&#182;</a>
+                <a class="pilcrow" href="#section-23">&#182;</a>
               </div>
               <p>Since we now have a way to create all the public methods that this deferred needs on a candidate object, let&#39;s use it to create them on itself.</p>
 
@@ -358,15 +405,15 @@ Quite useful if you want to transform the results of a promise or log them in so
         </li>
         
         
-        <li id="section-21">
+        <li id="section-24">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-21">&#182;</a>
+                <a class="pilcrow" href="#section-24">&#182;</a>
               </div>
-              <p>Moving to the methods that exist only on the deferred object itself, 
+              <p>Moving to the methods that exist only on the deferred object itself,
 let&#39;s create a generic closing function that stores the final resolution / rejection arguments for future callbacks;
-and then runs all the callbacks that have already been set. </p>
+and then runs all the callbacks that have already been set.</p>
 
             </div>
             
@@ -381,11 +428,11 @@ and then runs all the callbacks that have already been set. </p>
         </li>
         
         
-        <li id="section-22">
+        <li id="section-25">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-22">&#182;</a>
+                <a class="pilcrow" href="#section-25">&#182;</a>
               </div>
               <p>Now we can set up <code>.resolve([args])</code> method to close the deferred and call the <code>done</code> callbacks,</p>
 
@@ -396,11 +443,11 @@ and then runs all the callbacks that have already been set. </p>
         </li>
         
         
-        <li id="section-23">
+        <li id="section-26">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-23">&#182;</a>
+                <a class="pilcrow" href="#section-26">&#182;</a>
               </div>
               <p>and <code>.reject([args])</code> to fail it and call the <code>fail</code> callbacks.</p>
 
@@ -411,11 +458,11 @@ and then runs all the callbacks that have already been set. </p>
         </li>
         
         
-        <li id="section-24">
+        <li id="section-27">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-24">&#182;</a>
+                <a class="pilcrow" href="#section-27">&#182;</a>
               </div>
               <p>We can also set up <code>.resolveWith(context, [args])</code> and <code>.rejectWith(context, [args])</code> to allow setting an execution scope for the callbacks.</p>
 
@@ -429,43 +476,43 @@ and then runs all the callbacks that have already been set. </p>
         </li>
         
         
-        <li id="section-25">
+        <li id="section-28">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-25">&#182;</a>
+                <a class="pilcrow" href="#section-28">&#182;</a>
               </div>
-              <p>If we&#39;re dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail). 
+              <p>If we&#39;re dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail).
 Let&#39;s set up a <code>.when([deferreds])</code> method to do that. It should be able to take any number or deferreds as arguments (or an array of them).</p>
 
             </div>
             
             <div class="content"><div class='highlight'><pre><span class="function"><span class="title">_when</span></span> = -&gt;
   trigger = <span class="keyword">new</span> Deferred()
-  defs = flatten arguments    
+  defs = flatten arguments
   <span class="keyword">if</span> defs.length == <span class="number">1</span>
     defs[<span class="number">0</span>].done -&gt; trigger.resolve arguments...
   <span class="keyword">else</span>
     resolutionArgs = []
     finish = after defs.length, -&gt; trigger.resolve(resolutionArgs...)
-    defs.forEach (def, index) -&gt;    
-      def.done (args...) -&gt;        
-        resolutionArgs[index] = args        
+    defs.forEach (def, index) -&gt;
+      def.done (args...) -&gt;
+        resolutionArgs[index] = args
         finish()
-  
+
   def.fail(trigger.reject) <span class="keyword">for</span> def <span class="keyword">in</span> defs
   trigger.promise()</pre></div></div>
             
         </li>
         
         
-        <li id="section-26">
+        <li id="section-29">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-26">&#182;</a>
+                <a class="pilcrow" href="#section-29">&#182;</a>
               </div>
-              <p>Since the core team of <a href="http://zeptojs.com/">Zepto</a> (and maybe other jQuery compatible libraries) don&#39;t seem to like the idea of Deferreds / Promises too much, 
+              <p>Since the core team of <a href="http://zeptojs.com/">Zepto</a> (and maybe other jQuery compatible libraries) don&#39;t seem to like the idea of Deferreds / Promises too much,
 let&#39;s put in an easy way to install this library into Zetpo.</p>
 
             </div>
@@ -475,13 +522,13 @@ let&#39;s put in an easy way to install this library into Zetpo.</p>
         </li>
         
         
-        <li id="section-27">
+        <li id="section-30">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-27">&#182;</a>
+                <a class="pilcrow" href="#section-30">&#182;</a>
               </div>
-              <p>Add the <code>.Deferred()</code> constructor on to the framework. </p>
+              <p>Add the <code>.Deferred()</code> constructor on to the framework.</p>
 
             </div>
             
@@ -490,11 +537,11 @@ let&#39;s put in an easy way to install this library into Zetpo.</p>
         </li>
         
         
-        <li id="section-28">
+        <li id="section-31">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-28">&#182;</a>
+                <a class="pilcrow" href="#section-31">&#182;</a>
               </div>
               <p>And wrap the <code>.ajax()</code> method to return a promise instead.</p>
 
@@ -511,13 +558,13 @@ let&#39;s put in an easy way to install this library into Zetpo.</p>
         </li>
         
         
-        <li id="section-29">
+        <li id="section-32">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-29">&#182;</a>
+                <a class="pilcrow" href="#section-32">&#182;</a>
               </div>
-              <p>This should let us do <code>request.done(callback)</code> instead of passing callbacks in to the options hash. 
+              <p>This should let us do <code>request.done(callback)</code> instead of passing callbacks in to the options hash.
 Also lets us add as many callbacks as we need at any point in the code.</p>
 
             </div>
@@ -527,11 +574,11 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-30">
+        <li id="section-33">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-30">&#182;</a>
+                <a class="pilcrow" href="#section-33">&#182;</a>
               </div>
               <p>Rinse and repeat for errors. We can now use <code>request.fail(callback)</code>.</p>
 
@@ -546,28 +593,28 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-31">
+        <li id="section-34">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-31">&#182;</a>
+                <a class="pilcrow" href="#section-34">&#182;</a>
               </div>
               <p>Provide an abort method to cancel the ongoing request.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    promise.<span class="function"><span class="title">abort</span></span> = -&gt; xhr.abort()      
-    
+            <div class="content"><div class='highlight'><pre>    promise.<span class="function"><span class="title">abort</span></span> = -&gt; xhr.abort()
+
     promise</pre></div></div>
             
         </li>
         
         
-        <li id="section-32">
+        <li id="section-35">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-32">&#182;</a>
+                <a class="pilcrow" href="#section-35">&#182;</a>
               </div>
               <p>Let&#39;s also alias the <code>.when()</code> method, for good measure.</p>
 
@@ -578,11 +625,11 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-33">
+        <li id="section-36">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-33">&#182;</a>
+                <a class="pilcrow" href="#section-36">&#182;</a>
               </div>
               <p>Finally, let&#39;s support node by exporting the intersting stuff</p>
 
@@ -597,11 +644,11 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-34">
+        <li id="section-37">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-34">&#182;</a>
+                <a class="pilcrow" href="#section-37">&#182;</a>
               </div>
               <p>and the browser by setting the functions on <code>window</code>.</p>
 
@@ -614,11 +661,11 @@ Also lets us add as many callbacks as we need at any point in the code.</p>
         </li>
         
         
-        <li id="section-35">
+        <li id="section-38">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-35">&#182;</a>
+                <a class="pilcrow" href="#section-38">&#182;</a>
               </div>
               <p>That&#39;s all, folks. The End.</p>
 
