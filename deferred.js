@@ -134,6 +134,11 @@
       };
       candidate.pipe = pipe;
       candidate.then = pipe;
+      if (candidate.promise == null) {
+        candidate.promise = function() {
+          return candidate;
+        };
+      }
       return candidate;
     };
     this.promise(this);

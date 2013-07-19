@@ -275,6 +275,16 @@
         assert.equal(candidate, promise);
         return assertHasPromiseApi(candidate);
       });
+      it('should soak up extraneous promises', function() {
+        var def, promise;
+        def = new deferred.Deferred();
+        promise = def.promise().promise();
+        assertIsPromise(promise);
+        promise.done(function(arg) {
+          return assert.equal(arg, 42);
+        });
+        return def.resolve(42);
+      });
       return describe('when', function() {
         it('should return a promise', function() {
           return assertIsPromise(deferred.when(new deferred.Deferred()));

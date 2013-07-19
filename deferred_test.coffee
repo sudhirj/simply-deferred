@@ -202,6 +202,14 @@ describe 'deferred', ->
       assert.equal candidate, promise
       assertHasPromiseApi candidate
 
+    it 'should soak up extraneous promises', ->
+        def = new deferred.Deferred()
+        promise = def.promise().promise()
+        assertIsPromise promise
+
+        promise.done (arg) -> assert.equal arg, 42
+        def.resolve(42)
+
     describe 'when', ->
       it 'should return a promise', ->
         assertIsPromise deferred.when new deferred.Deferred()

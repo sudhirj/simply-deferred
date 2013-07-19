@@ -97,6 +97,9 @@ Deferred = ->
     candidate.pipe = pipe
     candidate.then = pipe
 
+    # soak up references to this promise's promise
+    candidate.promise ?= -> candidate
+
     return candidate
 
   # Since we now have a way to create all the public methods that this deferred needs on a candidate object, let's use it to create them on itself.
