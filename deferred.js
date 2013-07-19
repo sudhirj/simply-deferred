@@ -173,31 +173,32 @@
 
   _when = function() {
     var def, defs, finish, resolutionArgs, trigger, _i, _len;
-    trigger = new Deferred();
     defs = flatten(arguments);
-    if (defs.length === 1) {
-      defs[0].done(function() {
-        return trigger.resolve.apply(trigger, arguments);
-      });
-    } else {
-      resolutionArgs = [];
-      finish = after(defs.length, function() {
-        return trigger.resolve.apply(trigger, resolutionArgs);
-      });
-      defs.forEach(function(def, index) {
-        if (isPromise(def)) {
-          return def.done(function() {
-            var args;
-            args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-            resolutionArgs[index] = args;
-            return finish();
-          });
-        } else {
-          resolutionArgs[index] = def;
-          return finish();
-        }
-      });
+    if (defs.length === 0) {
+      if (isPromise(defs[0])) {
+        return defs[0];
+      } else {
+        return (new Deferred()).resolve(defs[0]).promise();
+      }
     }
+    trigger = new Deferred();
+    resolutionArgs = [];
+    finish = after(defs.length, function() {
+      return trigger.resolve.apply(trigger, resolutionArgs);
+    });
+    defs.forEach(function(def, index) {
+      if (isPromise(def)) {
+        return def.done(function() {
+          var args;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          resolutionArgs[index] = args.length > 1 ? args : args[0];
+          return finish();
+        });
+      } else {
+        resolutionArgs[index] = def;
+        return finish();
+      }
+    });
     for (_i = 0, _len = defs.length; _i < _len; _i++) {
       def = defs[_i];
       isPromise(def) && def.fail(trigger.reject);

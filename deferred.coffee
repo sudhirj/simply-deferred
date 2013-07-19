@@ -131,21 +131,24 @@ Deferred = ->
 # If we're dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail).
 # Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments (or an array of them).
 _when = ->
-  trigger = new Deferred()
   defs = flatten arguments
-  if defs.length == 1
-    defs[0].done -> trigger.resolve arguments...
-  else
-    resolutionArgs = []
-    finish = after defs.length, -> trigger.resolve(resolutionArgs...)
-    defs.forEach (def, index) ->
-      if isPromise def
-        def.done (args...) ->
-          resolutionArgs[index] = args
-          finish()
-      else
-        resolutionArgs[index] = def
+  if defs.length == 0
+    # small optimization: pass a single deferred object along
+    return if isPromise defs[0] then defs[0] else (new Deferred()).resolve(defs[0]).promise()
+
+  trigger = new Deferred()
+  resolutionArgs = []
+  finish = after defs.length, -> trigger.resolve(resolutionArgs...)
+  defs.forEach (def, index) ->
+    if isPromise def
+      def.done (args...) ->
+        # special case deferreds resolved with one or zero arguments
+        # promote it to a unary value rather than a list of arguments
+        resolutionArgs[index] = if args.length > 1 then args else args[0]
         finish()
+    else
+      resolutionArgs[index] = def
+      finish()
 
   isPromise(def) && def.fail(trigger.reject) for def in defs
   trigger.promise()

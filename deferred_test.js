@@ -333,15 +333,15 @@
           });
           return d1.resolve(42);
         });
-        it('should pass on arrays of arguments when used with multiple deferreds', function(done) {
+        it('should special case single or no arguments when using multiple deferreds', function(done) {
           var after_all, d1, d2, d3;
           d1 = new deferred.Deferred();
           d2 = new deferred.Deferred();
           d3 = new deferred.Deferred();
           after_all = deferred.when(d1, d2, d3);
           after_all.done(function(arg1, arg2, arg3) {
-            assert.deepEqual(arg1, [42]);
-            assert.deepEqual(arg2, []);
+            assert.equal(arg1, 42);
+            assert.equal(arg2, void 0);
             assert.deepEqual(arg3, ['abc', 123]);
             return done();
           });
