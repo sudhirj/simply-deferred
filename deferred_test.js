@@ -333,7 +333,7 @@
           });
           return d1.resolve(42);
         });
-        return it('should pass on arrays of arguments when used with multiple deferreds', function(done) {
+        it('should pass on arrays of arguments when used with multiple deferreds', function(done) {
           var after_all, d1, d2, d3;
           d1 = new deferred.Deferred();
           d2 = new deferred.Deferred();
@@ -348,6 +348,13 @@
           d2.resolve();
           d3.resolve('abc', 123);
           return d1.resolve(42);
+        });
+        return it('should handle non promise arguments', function() {
+          return deferred.when(1, 2, 42).done(function(arg1, arg2, arg3) {
+            assert.equal(arg1, 1);
+            assert.equal(arg2, 2);
+            return assert.equal(arg3, 42);
+          });
         });
       });
     });

@@ -20,6 +20,9 @@ has = (obj, prop) -> obj?.hasOwnProperty prop
 # while `isArguments` checks if the given object is a method arguments object (like an array, but not quite).
 isArguments = (obj) -> return has(obj, 'length') and has(obj, 'callee')
 
+# jQuery treats anything with a `promise()` function as deferrable
+isPromise = (obj) -> typeof obj?.promise == 'function'
+
 # Borrowed from the incredibly useful [underscore.js](http://underscorejs.org/), these three utilities help
 # flatten argument arrays,
 flatten = (array) ->
@@ -136,11 +139,15 @@ _when = ->
     resolutionArgs = []
     finish = after defs.length, -> trigger.resolve(resolutionArgs...)
     defs.forEach (def, index) ->
-      def.done (args...) ->
-        resolutionArgs[index] = args
+      if isPromise def
+        def.done (args...) ->
+          resolutionArgs[index] = args
+          finish()
+      else
+        resolutionArgs[index] = def
         finish()
 
-  def.fail(trigger.reject) for def in defs
+  isPromise(def) && def.fail(trigger.reject) for def in defs
   trigger.promise()
 
 # Since the core team of [Zepto](http://zeptojs.com/) (and maybe other jQuery compatible libraries) don't seem to like the idea of Deferreds / Promises too much,
