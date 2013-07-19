@@ -21,7 +21,7 @@ has = (obj, prop) -> obj?.hasOwnProperty prop
 isArguments = (obj) -> return has(obj, 'length') and has(obj, 'callee')
 
 # jQuery treats anything with a `promise()` function as deferrable
-isPromise = (obj) -> typeof obj?.promise == 'function'
+isPromise = (obj) -> has(obj, 'promise') && typeof obj?.promise == 'function'
 
 # Borrowed from the incredibly useful [underscore.js](http://underscorejs.org/), these three utilities help
 # flatten argument arrays,
@@ -51,7 +51,6 @@ execute = (callbacks, args, context) -> callback.call(context, args...) for call
 
 # Let's start with the Deferred object constructor - it needs no arguments
 Deferred = ->
-  @isPromise = -> true
   # and all `deferred` objects are in a `'pending'` state when initialized.
   state = PENDING
   doneCallbacks = []
@@ -86,7 +85,7 @@ Deferred = ->
         if filter then candidate[source] (args...) ->
           filteredArgs = filter args...
           # Some pipes might want to return another promise, though, so let's check if the object is a promise and resolve it correctly if it is.
-          if has(filteredArgs, 'isPromise') and filteredArgs.isPromise()
+          if isPromise filteredArgs
             filteredArgs[source] (args...) -> destination args...
           # Otherwise we can just send the filtered values onward.
           else destination(filteredArgs)

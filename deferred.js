@@ -20,7 +20,7 @@
   };
 
   isPromise = function(obj) {
-    return typeof (obj != null ? obj.promise : void 0) === 'function';
+    return has(obj, 'promise') && typeof (obj != null ? obj.promise : void 0) === 'function';
   };
 
   flatten = function(array) {
@@ -114,7 +114,7 @@
               var args, filteredArgs;
               args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
               filteredArgs = filter.apply(null, args);
-              if (has(filteredArgs, 'isPromise') && filteredArgs.isPromise()) {
+              if (isPromise(filteredArgs)) {
                 return filteredArgs[source](function() {
                   var args;
                   args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
