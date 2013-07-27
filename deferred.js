@@ -71,9 +71,6 @@
 
   Deferred = function() {
     var close, closingArguments, doneCallbacks, failCallbacks, state;
-    this.isPromise = function() {
-      return true;
-    };
     state = PENDING;
     doneCallbacks = [];
     failCallbacks = [];
@@ -174,14 +171,10 @@
   _when = function() {
     var def, defs, finish, resolutionArgs, trigger, _i, _len;
     defs = flatten(arguments);
-    if (defs.length === 0) {
-      if (isPromise(defs[0])) {
-        return defs[0];
-      } else {
-        return (new Deferred()).resolve(defs[0]).promise();
-      }
-    }
     trigger = new Deferred();
+    if (!defs.length) {
+      return trigger.resolve().promise();
+    }
     resolutionArgs = [];
     finish = after(defs.length, function() {
       return trigger.resolve.apply(trigger, resolutionArgs);

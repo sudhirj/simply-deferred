@@ -256,11 +256,14 @@ describe 'deferred', ->
         d1.resolve(42)
 
       it 'should handle non promise arguments', ->
-          deferred.when(1, 2, 42).done((arg1, arg2, arg3) ->
-            assert.equal arg1, 1
-            assert.equal arg2, 2
-            assert.equal arg3, 42
-          )
+        deferred.when(1, 2, 42).done((arg1, arg2, arg3) ->
+          assert.equal arg1, 1
+          assert.equal arg2, 2
+          assert.equal arg3, 42
+        )
+
+      it 'should handle zero arguments', (done) ->
+        deferred.when().done(done)
 
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
