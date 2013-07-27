@@ -275,6 +275,16 @@
         assert.equal(candidate, promise);
         return assertHasPromiseApi(candidate);
       });
+      it('should soak up extraneous promises', function() {
+        var def, promise;
+        def = new deferred.Deferred();
+        promise = def.promise().promise();
+        assertIsPromise(promise);
+        promise.done(function(arg) {
+          return assert.equal(arg, 42);
+        });
+        return def.resolve(42);
+      });
       return describe('when', function() {
         it('should return a promise', function() {
           return assertIsPromise(deferred.when(new deferred.Deferred()));
@@ -323,21 +333,28 @@
           });
           return d1.resolve(42);
         });
-        return it('should pass on arrays of arguments when used with multiple deferreds', function(done) {
+        it('should special case single or no arguments when using multiple deferreds', function(done) {
           var after_all, d1, d2, d3;
           d1 = new deferred.Deferred();
           d2 = new deferred.Deferred();
           d3 = new deferred.Deferred();
           after_all = deferred.when(d1, d2, d3);
           after_all.done(function(arg1, arg2, arg3) {
-            assert.deepEqual(arg1, [42]);
-            assert.deepEqual(arg2, []);
+            assert.equal(arg1, 42);
+            assert.equal(arg2, void 0);
             assert.deepEqual(arg3, ['abc', 123]);
             return done();
           });
           d2.resolve();
           d3.resolve('abc', 123);
           return d1.resolve(42);
+        });
+        return it('should handle non promise arguments', function() {
+          return deferred.when(1, 2, 42).done(function(arg1, arg2, arg3) {
+            assert.equal(arg1, 1);
+            assert.equal(arg2, 2);
+            return assert.equal(arg3, 42);
+          });
         });
       });
     });

@@ -20,6 +20,9 @@ has = (obj, prop) -> obj?.hasOwnProperty prop
 # while `isArguments` checks if the given object is a method arguments object (like an array, but not quite).
 isArguments = (obj) -> return has(obj, 'length') and has(obj, 'callee')
 
+# jQuery treats anything with a `promise()` function as deferrable
+isPromise = (obj) -> has(obj, 'promise') && typeof obj?.promise == 'function'
+
 # Borrowed from the incredibly useful [underscore.js](http://underscorejs.org/), these three utilities help
 # flatten argument arrays,
 flatten = (array) ->
@@ -48,7 +51,6 @@ execute = (callbacks, args, context) -> callback.call(context, args...) for call
 
 # Let's start with the Deferred object constructor - it needs no arguments
 Deferred = ->
-  @isPromise = -> true
   # and all `deferred` objects are in a `'pending'` state when initialized.
   state = PENDING
   doneCallbacks = []
@@ -83,7 +85,7 @@ Deferred = ->
         if filter then candidate[source] (args...) ->
           filteredArgs = filter args...
           # Some pipes might want to return another promise, though, so let's check if the object is a promise and resolve it correctly if it is.
-          if has(filteredArgs, 'isPromise') and filteredArgs.isPromise()
+          if isPromise filteredArgs
             filteredArgs[source] (args...) -> destination args...
           # Otherwise we can just send the filtered values onward.
           else destination(filteredArgs)
@@ -96,6 +98,9 @@ Deferred = ->
     # Expose the `.pipe(doneFilter, failFilter)` method and alias it to `.then()`.
     candidate.pipe = pipe
     candidate.then = pipe
+
+    # soak up references to this promise's promise
+    candidate.promise ?= -> candidate
 
     return candidate
 
@@ -125,19 +130,26 @@ Deferred = ->
 # If we're dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail).
 # Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments (or an array of them).
 _when = ->
-  trigger = new Deferred()
   defs = flatten arguments
-  if defs.length == 1
-    defs[0].done -> trigger.resolve arguments...
-  else
-    resolutionArgs = []
-    finish = after defs.length, -> trigger.resolve(resolutionArgs...)
-    defs.forEach (def, index) ->
-      def.done (args...) ->
-        resolutionArgs[index] = args
-        finish()
+  if defs.length == 0
+    # small optimization: pass a single deferred object along
+    return if isPromise defs[0] then defs[0] else (new Deferred()).resolve(defs[0]).promise()
 
-  def.fail(trigger.reject) for def in defs
+  trigger = new Deferred()
+  resolutionArgs = []
+  finish = after defs.length, -> trigger.resolve(resolutionArgs...)
+  defs.forEach (def, index) ->
+    if isPromise def
+      def.done (args...) ->
+        # special case deferreds resolved with one or zero arguments
+        # promote it to a unary value rather than a list of arguments
+        resolutionArgs[index] = if args.length > 1 then args else args[0]
+        finish()
+    else
+      resolutionArgs[index] = def
+      finish()
+
+  isPromise(def) && def.fail(trigger.reject) for def in defs
   trigger.promise()
 
 # Since the core team of [Zepto](http://zeptojs.com/) (and maybe other jQuery compatible libraries) don't seem to like the idea of Deferreds / Promises too much,

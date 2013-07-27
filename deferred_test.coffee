@@ -196,6 +196,14 @@ describe 'deferred', ->
       assert.equal candidate, promise
       assertHasPromiseApi candidate
 
+    it 'should soak up extraneous promises', ->
+        def = new deferred.Deferred()
+        promise = def.promise().promise()
+        assertIsPromise promise
+
+        promise.done (arg) -> assert.equal arg, 42
+        def.resolve(42)
+
     describe 'when', ->
       it 'should return a promise', ->
         assertIsPromise deferred.when new deferred.Deferred()
@@ -232,20 +240,27 @@ describe 'deferred', ->
         after_all.done (arg1) -> done() if arg1 is 42
         d1.resolve(42)
 
-      it 'should pass on arrays of arguments when used with multiple deferreds', (done) ->
+      it 'should special case single or no arguments when using multiple deferreds', (done) ->
         d1 = new deferred.Deferred()
         d2 = new deferred.Deferred()
         d3 = new deferred.Deferred()
         after_all = deferred.when(d1, d2, d3)
         after_all.done (arg1, arg2, arg3) ->
-          assert.deepEqual arg1, [42]
-          assert.deepEqual arg2, []
+          assert.equal arg1, 42
+          assert.equal arg2, undefined
           assert.deepEqual arg3, ['abc', 123]
           done()
 
         d2.resolve()
         d3.resolve('abc', 123)
         d1.resolve(42)
+
+      it 'should handle non promise arguments', ->
+          deferred.when(1, 2, 42).done((arg1, arg2, arg3) ->
+            assert.equal arg1, 1
+            assert.equal arg2, 2
+            assert.equal arg3, 42
+          )
 
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
