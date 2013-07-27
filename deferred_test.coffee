@@ -167,12 +167,6 @@ describe 'deferred', ->
 
       def.resolve('r1')
 
-
-
-
-
-
-
   describe 'then', ->
     it 'should alias pipe', ->
       def = new deferred.Deferred()
