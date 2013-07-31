@@ -122,8 +122,8 @@ Deferred = ->
   # and `.reject([args])` to fail it and call the `fail` callbacks.
   @reject = close REJECTED, failCallbacks
   # We can also set up `.resolveWith(context, [args])` and `.rejectWith(context, [args])` to allow setting an execution scope for the callbacks.
-  @resolveWith = (context, args...) -> close(RESOLVED, doneCallbacks, context)(args...)
-  @rejectWith = (context, args...) -> close(REJECTED, failCallbacks, context)(args...)
+  @resolveWith = (context, args) -> close(RESOLVED, doneCallbacks, context).apply this, args
+  @rejectWith = (context, args) -> close(REJECTED, failCallbacks, context).apply this, args
 
   return this
 

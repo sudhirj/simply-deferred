@@ -155,15 +155,11 @@
     };
     this.resolve = close(RESOLVED, doneCallbacks);
     this.reject = close(REJECTED, failCallbacks);
-    this.resolveWith = function() {
-      var args, context;
-      context = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      return close(RESOLVED, doneCallbacks, context).apply(null, args);
+    this.resolveWith = function(context, args) {
+      return close(RESOLVED, doneCallbacks, context).apply(this, args);
     };
-    this.rejectWith = function() {
-      var args, context;
-      context = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-      return close(REJECTED, failCallbacks, context).apply(null, args);
+    this.rejectWith = function(context, args) {
+      return close(REJECTED, failCallbacks, context).apply(this, args);
     };
     return this;
   };
