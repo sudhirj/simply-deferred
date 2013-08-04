@@ -3,7 +3,7 @@
   var Deferred, PENDING, REJECTED, RESOLVED, VERSION, after, execute, flatten, has, installInto, isArguments, isPromise, wrap, _when,
     __slice = [].slice;
 
-  VERSION = '2.2.0';
+  VERSION = '2.3.0';
 
   PENDING = "pending";
 
