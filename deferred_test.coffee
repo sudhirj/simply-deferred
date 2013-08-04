@@ -48,23 +48,33 @@ describe 'deferred', ->
     def = new deferred.Deferred()
     finishHolder = {finisher: callback}
     finish = (arg1) ->
-      assert.equal(42, arg1)
+      assert.equal 42, arg1
       @finisher()
     def.done finish
     def.always -> callback()
-    def.resolveWith(finishHolder, 42)
+    def.resolveWith(finishHolder, [42])
     assert.equal def.state(), 'resolved'
+
+  it 'should return a deferred for empty calls', ->
+    assertIsPromise new deferred.Deferred().resolveWith()
+
+  it 'should not mangle arrays', ->
+    def = new deferred.Deferred()
+    def.promise().done (arg1, arg2) ->
+      assert.equal arg1, 1
+      assert.equal arg2, 2
+    def.resolveWith(def, [1,2])
 
   it 'should scope fail callbacks when using rejectWith', (done) ->
     callback = _.after 2, done
     def = new deferred.Deferred()
     finishHolder = {finisher: callback}
     finish = (arg1) ->
-      assert.equal(42, arg1)
+      assert.equal 42, arg1
       @finisher()
     def.fail finish
     def.always -> callback()
-    def.rejectWith(finishHolder, 42)
+    def.rejectWith(finishHolder, [42])
     assert.equal def.state(), 'rejected'
 
 

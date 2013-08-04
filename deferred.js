@@ -70,7 +70,7 @@
   };
 
   Deferred = function() {
-    var close, closingArguments, doneCallbacks, failCallbacks, state;
+    var candidate, close, closingArguments, doneCallbacks, failCallbacks, state;
     state = PENDING;
     doneCallbacks = [];
     failCallbacks = [];
@@ -143,12 +143,14 @@
       return candidate;
     };
     this.promise(this);
+    candidate = this;
     close = function(finalState, callbacks, context) {
       return function() {
         if (state === PENDING) {
           state = finalState;
           closingArguments = arguments;
           execute(callbacks, closingArguments, context);
+          return candidate;
         }
         return this;
       };
@@ -156,10 +158,10 @@
     this.resolve = close(RESOLVED, doneCallbacks);
     this.reject = close(REJECTED, failCallbacks);
     this.resolveWith = function(context, args) {
-      return close(RESOLVED, doneCallbacks, context).apply(this, args);
+      return close(RESOLVED, doneCallbacks, context).apply(null, args);
     };
     this.rejectWith = function(context, args) {
-      return close(REJECTED, failCallbacks, context).apply(this, args);
+      return close(REJECTED, failCallbacks, context).apply(null, args);
     };
     return this;
   };

@@ -79,8 +79,20 @@
       def.always(function() {
         return callback();
       });
-      def.resolveWith(finishHolder, 42);
+      def.resolveWith(finishHolder, [42]);
       return assert.equal(def.state(), 'resolved');
+    });
+    it('should return a deferred for empty calls', function() {
+      return assertIsPromise(new deferred.Deferred().resolveWith());
+    });
+    it('should not mangle arrays', function() {
+      var def;
+      def = new deferred.Deferred();
+      def.promise().done(function(arg1, arg2) {
+        assert.equal(arg1, 1);
+        return assert.equal(arg2, 2);
+      });
+      return def.resolveWith(def, [1, 2]);
     });
     it('should scope fail callbacks when using rejectWith', function(done) {
       var callback, def, finish, finishHolder;
@@ -97,7 +109,7 @@
       def.always(function() {
         return callback();
       });
-      def.rejectWith(finishHolder, 42);
+      def.rejectWith(finishHolder, [42]);
       return assert.equal(def.state(), 'rejected');
     });
     it('should call all the fail callbacks', function(done) {

@@ -110,20 +110,22 @@ Deferred = ->
   # Moving to the methods that exist only on the deferred object itself,
   # let's create a generic closing function that stores the final resolution / rejection arguments for future callbacks;
   # and then runs all the callbacks that have already been set.
+  candidate = this
   close = (finalState, callbacks, context) ->
     return ->
       if state is PENDING
         state = finalState
         closingArguments = arguments
         execute callbacks, closingArguments, context
+        return candidate
       return this
   # Now we can set up `.resolve([args])` method to close the deferred and call the `done` callbacks,
   @resolve = close RESOLVED, doneCallbacks
   # and `.reject([args])` to fail it and call the `fail` callbacks.
   @reject = close REJECTED, failCallbacks
   # We can also set up `.resolveWith(context, [args])` and `.rejectWith(context, [args])` to allow setting an execution scope for the callbacks.
-  @resolveWith = (context, args) -> close(RESOLVED, doneCallbacks, context).apply this, args
-  @rejectWith = (context, args) -> close(REJECTED, failCallbacks, context).apply this, args
+  @resolveWith = (context, args) -> close(RESOLVED, doneCallbacks, context)(args...)
+  @rejectWith = (context, args) -> close(REJECTED, failCallbacks, context)(args...)
 
   return this
 
