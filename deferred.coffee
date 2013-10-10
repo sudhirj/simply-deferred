@@ -187,6 +187,14 @@ if (typeof exports isnt 'undefined')
   exports.Deferred = -> new Deferred()
   exports.when = _when
   exports.installInto = installInto
+else if typeof define is 'function' && define.amd
+  define ()->
+    if Zepto
+      installInto(Zepto)
+    else
+      Deferred
+else if Zepto
+  installInto(Zepto)
 else
 # and the browser by setting the functions on `window`.
   this.Deferred = -> new Deferred();
