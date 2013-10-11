@@ -103,35 +103,27 @@
         return (_ref = candidate.done.apply(candidate, arguments)).fail.apply(_ref, arguments);
       };
       pipe = function(doneFilter, failFilter) {
-        var deferred, filter;
-        deferred = new Deferred();
-        filter = function(source, destination, filter) {
-          if (filter) {
+        var filter, master;
+        master = new Deferred();
+        filter = function(source, funnel, callback) {
+          if (callback != null) {
             return candidate[source](function() {
-              var args, filteredArgs;
+              var args, value;
               args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-              filteredArgs = filter.apply(null, args);
-              if (isPromise(filteredArgs)) {
-                return filteredArgs[source](function() {
-                  var args;
-                  args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-                  return destination.apply(null, args);
-                });
+              value = callback.apply(null, args);
+              if (isPromise(value)) {
+                return value.done(master.resolve).fail(master.reject);
               } else {
-                return destination(filteredArgs);
+                return master[funnel](value);
               }
             });
           } else {
-            return candidate[source](function() {
-              var args;
-              args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-              return destination.apply(null, args);
-            });
+            return candidate[source](master[funnel]);
           }
         };
-        filter('done', deferred.resolve, doneFilter);
-        filter('fail', deferred.reject, failFilter);
-        return deferred;
+        filter('done', 'resolve', doneFilter);
+        filter('fail', 'reject', failFilter);
+        return master;
       };
       candidate.pipe = pipe;
       candidate.then = pipe;
