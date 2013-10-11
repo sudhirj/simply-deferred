@@ -351,6 +351,7 @@
           var after_all, d1;
           d1 = new deferred.Deferred();
           after_all = deferred.when(d1);
+          assert.equal(d1, after_all);
           after_all.done(function(arg1) {
             if (arg1 === 42) {
               return done();

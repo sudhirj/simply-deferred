@@ -259,6 +259,7 @@ describe 'deferred', ->
       it 'should pass on resolve arguments as is when used with a single deferred', (done) ->
         d1 = new deferred.Deferred()
         after_all = deferred.when(d1)
+        assert.equal d1, after_all
         after_all.done (arg1) -> done() if arg1 is 42
         d1.resolve(42)
 
