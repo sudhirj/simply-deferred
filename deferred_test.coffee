@@ -177,6 +177,18 @@ describe 'deferred', ->
 
       def.resolve('r1')
 
+    it 'should allow changing the state', (done) ->
+      def = deferred.Deferred()
+
+      def.pipe((result) ->
+        return deferred.Deferred().reject('failure').promise()
+      ).fail((msg) ->
+        assert.equal msg, 'failure'
+        done() if msg is 'failure'
+      )
+
+      def.resolve('r1')
+
   describe 'then', ->
     it 'should alias pipe', ->
       def = new deferred.Deferred()
