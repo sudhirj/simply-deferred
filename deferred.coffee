@@ -80,20 +80,24 @@ Deferred = ->
     # It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods.
     # Quite useful if you want to transform the results of a promise or log them in some way.
     pipe = (doneFilter, failFilter) ->
-      deferred = new Deferred()
-      filter = (source, destination, filter) ->
-        if filter then candidate[source] (args...) ->
-          filteredArgs = filter args...
-          # Some pipes might want to return another promise, though, so let's check if the object is a promise and resolve it correctly if it is.
-          if isPromise filteredArgs
-            filteredArgs[source] (args...) -> destination args...
-          # Otherwise we can just send the filtered values onward.
-          else destination(filteredArgs)
-        # If no filters have been passed, this degenerates into a shortcut method for adding both `done` and `fail` callbacks.
-        else candidate[source] (args...) -> destination args...
-      filter 'done', deferred.resolve, doneFilter
-      filter 'fail', deferred.reject, failFilter
-      deferred
+      master = new Deferred()
+
+      filter = (source, funnel, callback) ->
+        if callback?
+          candidate[source]((args...) ->
+            value = callback(args...)
+            if isPromise(value)
+              value.done(master.resolve).fail(master.reject)
+            else
+              master[funnel](value)
+          )
+        else
+          candidate[source](master[funnel])
+
+      filter('done', 'resolve', doneFilter)
+      filter('fail', 'reject', failFilter)
+
+      return master
 
     # Expose the `.pipe(doneFilter, failFilter)` method and alias it to `.then()`.
     candidate.pipe = pipe
@@ -133,6 +137,10 @@ Deferred = ->
 # Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments (or an array of them).
 _when = ->
   defs = flatten arguments
+  if defs.length == 1
+    # small optimization: pass a single deferred object along
+    return if isPromise defs[0] then defs[0] else (new Deferred()).resolve(defs[0]).promise()
+
   trigger = new Deferred()
   return trigger.resolve().promise() if not defs.length
 

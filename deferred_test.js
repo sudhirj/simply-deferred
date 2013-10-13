@@ -234,7 +234,7 @@
         def.reject(5);
         return filtered.fail(finisher);
       });
-      return it('should accept promises from filters and call them later with arguments', function(done) {
+      it('should accept promises from filters and call them later with arguments', function(done) {
         var def, filter;
         def = deferred.Deferred();
         filter = function(result) {
@@ -249,6 +249,19 @@
         def.then(filter).done(function(result) {
           assert.equal(result, 'r2');
           if (result === 'r2') {
+            return done();
+          }
+        });
+        return def.resolve('r1');
+      });
+      return it('should allow changing the state', function(done) {
+        var def;
+        def = deferred.Deferred();
+        def.pipe(function(result) {
+          return deferred.Deferred().reject('failure').promise();
+        }).fail(function(msg) {
+          assert.equal(msg, 'failure');
+          if (msg === 'failure') {
             return done();
           }
         });
@@ -338,6 +351,7 @@
           var after_all, d1;
           d1 = new deferred.Deferred();
           after_all = deferred.when(d1);
+          assert.equal(d1, after_all);
           after_all.done(function(arg1) {
             if (arg1 === 42) {
               return done();

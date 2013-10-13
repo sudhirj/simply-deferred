@@ -177,6 +177,18 @@ describe 'deferred', ->
 
       def.resolve('r1')
 
+    it 'should allow changing the state', (done) ->
+      def = deferred.Deferred()
+
+      def.pipe((result) ->
+        return deferred.Deferred().reject('failure').promise()
+      ).fail((msg) ->
+        assert.equal msg, 'failure'
+        done() if msg is 'failure'
+      )
+
+      def.resolve('r1')
+
   describe 'then', ->
     it 'should alias pipe', ->
       def = new deferred.Deferred()
@@ -247,6 +259,7 @@ describe 'deferred', ->
       it 'should pass on resolve arguments as is when used with a single deferred', (done) ->
         d1 = new deferred.Deferred()
         after_all = deferred.when(d1)
+        assert.equal d1, after_all
         after_all.done (arg1) -> done() if arg1 is 42
         d1.resolve(42)
 
