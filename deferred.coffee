@@ -5,7 +5,7 @@
 # ####[Source (github)](http://github.com/sudhirj/simply-deferred) | [Documentation](https://github.com/sudhirj/simply-deferred#simply-deferred)
 # &copy; Sudhir Jonathan [sudhirjonathan.com](http://www.sudhirjonathan.com)
 
-VERSION = '2.3.0'
+VERSION = '2.4.0'
 
 # First, let's set up the constants that we'll need to signify the state of the `deferred` object. These will be returned from the `state()` method.
 
@@ -83,16 +83,10 @@ Deferred = ->
       master = new Deferred()
 
       filter = (source, funnel, callback) ->
-        if callback?
-          candidate[source]((args...) ->
-            value = callback(args...)
-            if isPromise(value)
-              value.done(master.resolve).fail(master.reject)
-            else
-              master[funnel](value)
-          )
-        else
-          candidate[source](master[funnel])
+        if not callback then return candidate[source](master[funnel])
+        candidate[source] (args...) ->
+          value = callback(args...)
+          if isPromise(value) then value.done(master.resolve).fail(master.reject) else master[funnel](value)
 
       filter('done', 'resolve', doneFilter)
       filter('fail', 'reject', failFilter)

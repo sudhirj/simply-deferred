@@ -3,7 +3,7 @@
   var Deferred, PENDING, REJECTED, RESOLVED, VERSION, after, execute, flatten, has, installInto, isArguments, isPromise, wrap, _when,
     __slice = [].slice;
 
-  VERSION = '2.3.0';
+  VERSION = '2.4.0';
 
   PENDING = "pending";
 
@@ -106,20 +106,19 @@
         var filter, master;
         master = new Deferred();
         filter = function(source, funnel, callback) {
-          if (callback != null) {
-            return candidate[source](function() {
-              var args, value;
-              args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-              value = callback.apply(null, args);
-              if (isPromise(value)) {
-                return value.done(master.resolve).fail(master.reject);
-              } else {
-                return master[funnel](value);
-              }
-            });
-          } else {
+          if (!callback) {
             return candidate[source](master[funnel]);
           }
+          return candidate[source](function() {
+            var args, value;
+            args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+            value = callback.apply(null, args);
+            if (isPromise(value)) {
+              return value.done(master.resolve).fail(master.reject);
+            } else {
+              return master[funnel](value);
+            }
+          });
         };
         filter('done', 'resolve', doneFilter);
         filter('fail', 'reject', failFilter);
@@ -234,6 +233,16 @@
     };
     exports.when = _when;
     exports.installInto = installInto;
+  } else if (typeof define === 'function' && define.amd) {
+    define(function() {
+      if (Zepto) {
+        return installInto(Zepto);
+      } else {
+        return Deferred;
+      }
+    });
+  } else if (Zepto) {
+    installInto(Zepto);
   } else {
     this.Deferred = function() {
       return new Deferred();
