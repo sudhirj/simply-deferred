@@ -235,13 +235,13 @@
     exports.installInto = installInto;
   } else if (typeof define === 'function' && define.amd) {
     define(function() {
-      if (Zepto) {
+      if (typeof Zepto !== 'undefined') {
         return installInto(Zepto);
       } else {
         return Deferred;
       }
     });
-  } else if (Zepto) {
+  } else if (typeof Zepto !== 'undefined') {
     installInto(Zepto);
   } else {
     this.Deferred = function() {
