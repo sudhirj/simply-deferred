@@ -191,11 +191,11 @@ if (typeof exports isnt 'undefined')
   exports.installInto = installInto
 else if typeof define is 'function' && define.amd
   define ()->
-    if Zepto
+    if typeof Zepto isnt 'undefined'
       installInto(Zepto)
     else
       Deferred
-else if Zepto
+else if typeof Zepto isnt 'undefined'
   installInto(Zepto)
 else
 # and the browser by setting the functions on `window`.
