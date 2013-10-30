@@ -48,4 +48,4 @@ If you'd like contribute a fix or a feature, that would be even better. Please m
 If you'd like to start work on a feature that is not part of the jQuery library, let's talk about it first - the goal here for this library to be a drop in replacement for jQuery, with the same docs and API.
 
 ###Support
-If you'd like to financially support the development of this library or just say thanks, you can send Bitcoin to `18TAaTamWaiv7cMK6FdbYeRzJUqBnECEah`.
+If you'd like to financially support the development of this library or just say thanks, you can send Bitcoin to `18TAaTamWaiv7cMK6FdbYeRzJUqBnECEah`. I'm also available to consult on how promises can improve your codebase - mail me at sudhir.j+github@gmail.com
