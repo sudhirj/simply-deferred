@@ -194,6 +194,8 @@ else if typeof define is 'function' && define.amd
     if typeof Zepto isnt 'undefined'
       installInto(Zepto)
     else
+      Deferred.when = _when
+      Deferred.installInto = installInto
       Deferred
 else if typeof Zepto isnt 'undefined'
   installInto(Zepto)
