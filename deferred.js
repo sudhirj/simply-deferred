@@ -238,6 +238,8 @@
       if (typeof Zepto !== 'undefined') {
         return installInto(Zepto);
       } else {
+        Deferred.when = _when;
+        Deferred.installInto = installInto;
         return Deferred;
       }
     });
