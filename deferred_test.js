@@ -9,7 +9,7 @@
 
   _ = require('underscore');
 
-  expectedMethods = ['done', 'fail', 'always', 'state', 'then', 'pipe'];
+  expectedMethods = ['done', 'fail', 'progress', 'always', 'state', 'then', 'pipe'];
 
   assertHasPromiseApi = function(promise) {
     var method, _i, _len, _results;
@@ -52,6 +52,13 @@
       assert.equal(def.state(), "rejected");
       def.resolve();
       return assert.equal(def.state(), "rejected");
+    });
+    it('should maintain a pending state', function() {
+      var def;
+      def = new deferred.Deferred();
+      assert.equal(def.state(), "pending");
+      def.notify();
+      return assert.equal(def.state(), "pending");
     });
     it('should call all the done callbacks', function(done) {
       var callback, def;
@@ -122,6 +129,116 @@
       def.resolve();
       def.fail(callback, [callback, callback]);
       return def.done(callback);
+    });
+    it('should scope progress callbacks when using notifyWith', function(done) {
+      var callback, def, finish, finishHolder;
+      callback = _.after(2, done);
+      def = new deferred.Deferred();
+      finishHolder = {
+        finisher: callback
+      };
+      finish = function(arg1) {
+        assert.equal(42, arg1);
+        return this.finisher();
+      };
+      def.progress(finish);
+      def.progress(function() {
+        return callback();
+      });
+      def.notifyWith(finishHolder, [42]);
+      return assert.equal(def.state(), 'pending');
+    });
+    it('should call all the progress callbacks each notification', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(9, done);
+      def.progress(callback).progress([callback, callback]);
+      def.notify();
+      def.progress(callback).progress([callback, callback]);
+      return def.notify();
+    });
+    it('should call progress callbacks with updated arguments on each notification', function(done) {
+      var callback, def, i;
+      def = new deferred.Deferred();
+      i = 0;
+      callback = function(arg1) {
+        assert.equal(arg1, i);
+        if (arg1 === 2) {
+          return done();
+        }
+      };
+      def.progress(callback);
+      def.notify(i);
+      i++;
+      def.notify(i);
+      i++;
+      return def.notify(i);
+    });
+    it('should run notify callbacks and then accept resolution', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(2, done);
+      def.progress(callback);
+      def.notify();
+      assert.equal(def.state(), 'pending');
+      def.done(callback);
+      return def.resolve();
+    });
+    it('should run notify callbacks and then accept rejection', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(2, done);
+      def.progress(callback);
+      def.notify();
+      assert.equal(def.state(), 'pending');
+      def.fail(callback);
+      return def.reject();
+    });
+    it('should not run notify callbacks after being resolved', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(2, done);
+      def.progress(callback);
+      def.notify();
+      def.done(callback);
+      def.resolve();
+      return def.notify();
+    });
+    it('should run additional progress callbacks imediately after being resolved', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(3, done);
+      def.progress(callback);
+      def.notify();
+      def.done(callback);
+      def.resolve();
+      assert.equal(def.state(), 'resolved');
+      return def.progress(callback);
+    });
+    it('should run additional progress callbacks imediately after being rejected', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(3, done);
+      def.progress(callback);
+      def.notify();
+      def.fail(callback);
+      def.reject();
+      assert.equal(def.state(), 'rejected');
+      return def.progress(callback);
+    });
+    it('should run additional progress callbacks with the last sent notify arguments', function(done) {
+      var callback, def;
+      def = new deferred.Deferred();
+      callback = _.after(3, function(arg1) {
+        if (arg1 === 2) {
+          return done();
+        }
+      });
+      def.progress(callback);
+      def.notify(1);
+      def.notify(2);
+      def.resolve(5);
+      return def.progress(callback);
     });
     it('should call all the always callbacks on resolution', function(done) {
       var callback, def;
@@ -195,6 +312,20 @@
         def.reject(2);
         return filtered.fail(finisher);
       });
+      it('should pipe on progress', function(done) {
+        var def, filtered, finisher;
+        finisher = function(value) {
+          if (value === 6) {
+            return done();
+          }
+        };
+        def = new deferred.Deferred();
+        filtered = def.pipe(null, null, function(value) {
+          return value * 3;
+        });
+        filtered.progress(finisher);
+        return def.notify(2);
+      });
       it('should pipe with arrays intact', function(done) {
         var def, filtered, finisher;
         finisher = function(value) {
@@ -233,6 +364,18 @@
         filtered = def.pipe(null, null);
         def.reject(5);
         return filtered.fail(finisher);
+      });
+      it('should pass through for null filters for notify', function(done) {
+        var def, filtered, finisher;
+        finisher = function(value) {
+          if (value === 5) {
+            return done();
+          }
+        };
+        def = new deferred.Deferred();
+        filtered = def.pipe(null, null, null);
+        filtered.progress(finisher);
+        return def.notify(5);
       });
       it('should accept promises from filters and call them later with arguments', function(done) {
         var def, filter;
@@ -281,11 +424,14 @@
         def = new deferred.Deferred();
         promise = def.promise();
         assertIsPromise(promise);
-        callback = _.after(5, done);
-        promise.always(callback).always(callback).fail(callback).done(callback).fail(callback);
+        callback = _.after(7, done);
+        promise.always(callback).always(callback).progress(callback).fail(callback).done(callback).fail(callback);
+        assertIsPromise(promise.progress(callback));
         assertIsPromise(promise.done(callback));
         assertIsPromise(promise.fail(callback));
         assertIsPromise(promise.always(callback));
+        assert.equal("pending", promise.state());
+        def.notify();
         assert.equal("pending", promise.state());
         def.resolve();
         return assert.equal("resolved", promise.state());
