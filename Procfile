@@ -1,2 +1,2 @@
-compile: coffee -cw *.coffee 
+compile: coffee -cw *.coffee
 test: ./node_modules/mocha/bin/mocha *.js -Gw

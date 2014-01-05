@@ -176,7 +176,7 @@ describe 'deferred', ->
 
   it 'should run additional progress callbacks with the last sent notify arguments', (done) ->
     def = new deferred.Deferred();
-    callback = _.after 3, (arg1) -> 
+    callback = _.after 3, (arg1) ->
       if arg1 is 2
         done()
     def.progress(callback)
