@@ -23,8 +23,11 @@ Simply Deferred is partially compatible with jQuery's API, so the [docs and usag
 * `deferred.state()`
 * `deferred.done()`
 * `deferred.fail()`
+* `deferred.progress()`
 * `deferred.always()`
 * `deferred.promise()`
+* `deferred.notify()`
+* `deferred.notifyWith()`
 * `deferred.resolve()`
 * `deferred.resolveWith()`
 * `deferred.rejectWith()`

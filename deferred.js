@@ -70,39 +70,47 @@
   };
 
   Deferred = function() {
-    var candidate, close, closingArguments, doneCallbacks, failCallbacks, state;
+    var candidate, close, closingArguments, doneCallbacks, failCallbacks, progressCallbacks, state;
     state = PENDING;
     doneCallbacks = [];
     failCallbacks = [];
-    closingArguments = {};
+    progressCallbacks = [];
+    closingArguments = {
+      'resolved': {},
+      'rejected': {},
+      'pending': {}
+    };
     this.promise = function(candidate) {
       var pipe, storeCallbacks;
       candidate = candidate || {};
       candidate.state = function() {
         return state;
       };
-      storeCallbacks = function(shouldExecuteImmediately, holder) {
+      storeCallbacks = function(shouldExecuteImmediately, holder, holderState) {
         return function() {
           if (state === PENDING) {
             holder.push.apply(holder, flatten(arguments));
           }
           if (shouldExecuteImmediately()) {
-            execute(arguments, closingArguments);
+            execute(arguments, closingArguments[holderState]);
           }
           return candidate;
         };
       };
       candidate.done = storeCallbacks((function() {
         return state === RESOLVED;
-      }), doneCallbacks);
+      }), doneCallbacks, RESOLVED);
       candidate.fail = storeCallbacks((function() {
         return state === REJECTED;
-      }), failCallbacks);
+      }), failCallbacks, REJECTED);
+      candidate.progress = storeCallbacks((function() {
+        return state !== PENDING;
+      }), progressCallbacks, PENDING);
       candidate.always = function() {
         var _ref;
         return (_ref = candidate.done.apply(candidate, arguments)).fail.apply(_ref, arguments);
       };
-      pipe = function(doneFilter, failFilter) {
+      pipe = function(doneFilter, failFilter, progressFilter) {
         var filter, master;
         master = new Deferred();
         filter = function(source, funnel, callback) {
@@ -114,7 +122,7 @@
             args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
             value = callback.apply(null, args);
             if (isPromise(value)) {
-              return value.done(master.resolve).fail(master.reject);
+              return value.done(master.resolve).fail(master.reject).progress(master.notify);
             } else {
               return master[funnel](value);
             }
@@ -122,6 +130,7 @@
         };
         filter('done', 'resolve', doneFilter);
         filter('fail', 'reject', failFilter);
+        filter('progress', 'notify', progressFilter);
         return master;
       };
       candidate.pipe = pipe;
@@ -139,8 +148,8 @@
       return function() {
         if (state === PENDING) {
           state = finalState;
-          closingArguments = arguments;
-          execute(callbacks, closingArguments, context);
+          closingArguments[finalState] = arguments;
+          execute(callbacks, closingArguments[finalState], context);
           return candidate;
         }
         return this;
@@ -148,11 +157,15 @@
     };
     this.resolve = close(RESOLVED, doneCallbacks);
     this.reject = close(REJECTED, failCallbacks);
+    this.notify = close(PENDING, progressCallbacks);
     this.resolveWith = function(context, args) {
       return close(RESOLVED, doneCallbacks, context).apply(null, args);
     };
     this.rejectWith = function(context, args) {
       return close(REJECTED, failCallbacks, context).apply(null, args);
+    };
+    this.notifyWith = function(context, args) {
+      return close(PENDING, progressCallbacks, context).apply(null, args);
     };
     return this;
   };

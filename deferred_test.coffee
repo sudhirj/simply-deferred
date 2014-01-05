@@ -3,7 +3,7 @@ assert = require 'assert'
 _ = require 'underscore'
 
 
-expectedMethods = ['done', 'fail', 'always', 'state', 'then', 'pipe']
+expectedMethods = ['done', 'fail', 'progress', 'always', 'state', 'then', 'pipe']
 assertHasPromiseApi = (promise) -> assert _.has(promise, method) for method in expectedMethods
 assertIsPromise = (promise) -> assertHasPromiseApi promise
 
@@ -32,6 +32,12 @@ describe 'deferred', ->
     assert.equal def.state(), "rejected"
     def.resolve()
     assert.equal def.state(), "rejected"
+
+  it 'should maintain a pending state', ->
+    def = new deferred.Deferred()
+    assert.equal def.state(), "pending"
+    def.notify()
+    assert.equal def.state(), "pending"
 
   it 'should call all the done callbacks', (done) ->
     def = new deferred.Deferred()
@@ -77,7 +83,6 @@ describe 'deferred', ->
     def.rejectWith(finishHolder, [42])
     assert.equal def.state(), 'rejected'
 
-
   it 'should call all the fail callbacks', (done) ->
     def = new deferred.Deferred()
     callback = _.after 8, done
@@ -87,6 +92,98 @@ describe 'deferred', ->
     def.resolve()
     def.fail callback, [callback, callback]
     def.done callback
+
+  it 'should scope progress callbacks when using notifyWith', (done) ->
+    callback = _.after 2, done
+    def = new deferred.Deferred()
+    finishHolder = {finisher: callback}
+    finish = (arg1) ->
+      assert.equal 42, arg1
+      @finisher()
+    def.progress finish
+    def.progress -> callback()
+    def.notifyWith(finishHolder, [42])
+    assert.equal def.state(), 'pending'
+
+  it 'should call all the progress callbacks each notification', (done) ->
+    def = new deferred.Deferred()
+    callback = _.after 9, done
+    def.progress(callback).progress([callback, callback])
+    def.notify()
+    def.progress(callback).progress([callback, callback])
+    def.notify()
+
+  it 'should call progress callbacks with updated arguments on each notification', (done) ->
+    def = new deferred.Deferred()
+    i = 0
+    callback = (arg1) ->
+      assert.equal arg1, i
+      if arg1 is 2
+        done()
+    def.progress(callback)
+    def.notify i
+    i++
+    def.notify i
+    i++
+    def.notify i
+
+  it 'should run notify callbacks and then accept resolution', (done) ->
+    def = new deferred.Deferred();
+    callback = _.after 2, done
+    def.progress(callback)
+    def.notify()
+    assert.equal def.state(), 'pending'
+    def.done(callback)
+    def.resolve()
+
+  it 'should run notify callbacks and then accept rejection', (done) ->
+    def = new deferred.Deferred();
+    callback = _.after 2, done
+    def.progress(callback)
+    def.notify()
+    assert.equal def.state(), 'pending'
+    def.fail(callback)
+    def.reject()
+
+  it 'should not run notify callbacks after being resolved', (done) ->
+    def = new deferred.Deferred();
+    callback = _.after 2, done
+    def.progress(callback)
+    def.notify()
+    def.done(callback)
+    def.resolve()
+    def.notify()
+
+  it 'should run additional progress callbacks imediately after being resolved', (done) ->
+    def = new deferred.Deferred();
+    callback = _.after 3, done
+    def.progress(callback)
+    def.notify()
+    def.done(callback)
+    def.resolve()
+    assert.equal def.state(), 'resolved'
+    def.progress(callback)
+
+  it 'should run additional progress callbacks imediately after being rejected', (done) ->
+    def = new deferred.Deferred();
+    callback = _.after 3, done
+    def.progress(callback)
+    def.notify()
+    def.fail(callback)
+    def.reject()
+    assert.equal def.state(), 'rejected'
+    def.progress(callback)
+
+  it 'should run additional progress callbacks with the last sent notify arguments', (done) ->
+    def = new deferred.Deferred();
+    callback = _.after 3, (arg1) -> 
+      if arg1 is 2
+        done()
+    def.progress(callback)
+    def.notify 1
+    def.notify 2
+    def.resolve 5
+    def.progress(callback)
 
   it 'should call all the always callbacks on resolution', (done) ->
     def = new deferred.Deferred()
@@ -138,6 +235,14 @@ describe 'deferred', ->
       def.reject 2
       filtered.fail finisher
 
+
+    it 'should pipe on progress', (done) ->
+      finisher = (value) -> if value is 6 then done()
+      def = new deferred.Deferred()
+      filtered = def.pipe null, null, (value) -> value * 3
+      filtered.progress finisher
+      def.notify 2
+
     it 'should pipe with arrays intact', (done) ->
       finisher = (value) ->
         if value.length is [1,2,3].length then done()
@@ -161,6 +266,13 @@ describe 'deferred', ->
       filtered = def.pipe(null, null)
       def.reject 5
       filtered.fail finisher
+
+    it 'should pass through for null filters for notify', (done) ->
+      finisher = (value) -> if value is 5 then done()
+      def = new deferred.Deferred()
+      filtered = def.pipe(null, null, null)
+      filtered.progress finisher
+      def.notify 5
 
     it 'should accept promises from filters and call them later with arguments', (done) ->
       def = deferred.Deferred()
@@ -201,12 +313,15 @@ describe 'deferred', ->
 
       assertIsPromise promise
 
-      callback = _.after 5, done
-      promise.always(callback).always(callback).fail(callback).done(callback).fail(callback)
+      callback = _.after 7, done
+      promise.always(callback).always(callback).progress(callback).fail(callback).done(callback).fail(callback)
+      assertIsPromise promise.progress callback
       assertIsPromise promise.done callback
       assertIsPromise promise.fail callback
       assertIsPromise promise.always callback
 
+      assert.equal "pending", promise.state()
+      def.notify()
       assert.equal "pending", promise.state()
       def.resolve()
       assert.equal "resolved", promise.state()

@@ -55,7 +55,8 @@ Deferred = ->
   state = PENDING
   doneCallbacks = []
   failCallbacks = []
-  closingArguments = {}
+  progressCallbacks = []
+  closingArguments = {'resolved': {}, 'rejected': {}, 'pending': {}}
   # Calling `.promise()` gives you an object that you pass around your code indiscriminately.
   # Any code can add callbacks to a `promise`, but none can alter the state of the `deferred` itself.
   # You can also transform any candidate object into a promise for this particular deferred object by passing it in.
@@ -65,31 +66,34 @@ Deferred = ->
     candidate.state = -> state
 
     # Let's now create a mechanism to store the callbacks that are added in, or execute them immediately if the deferred has already been resolved or rejected.
-    storeCallbacks = (shouldExecuteImmediately, holder) ->
+    storeCallbacks = (shouldExecuteImmediately, holder, holderState) ->
       return ->
         if state is PENDING then holder.push (flatten arguments)...
-        if shouldExecuteImmediately() then execute arguments, closingArguments
+        if shouldExecuteImmediately() then execute arguments, closingArguments[holderState]
         return candidate
     # Now we can add success / resolution callbacks using `.done(callback)`,
-    candidate.done = storeCallbacks((-> state is RESOLVED), doneCallbacks)
+    candidate.done = storeCallbacks((-> state is RESOLVED), doneCallbacks, RESOLVED)
     # or failure callbacks using `.fail(callback)`,
-    candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks)
+    candidate.fail = storeCallbacks((-> state is REJECTED), failCallbacks, REJECTED)
+    # and notification callbacks using `.notify(callback)`,
+    candidate.progress = storeCallbacks((-> state isnt PENDING), progressCallbacks, PENDING)
     # or register a callback to always fire when the deferred is either resolved or rejected - using `.always(callback)`
     candidate.always = -> candidate.done(arguments...).fail(arguments...)
 
     # It also makes sense to set up a piper to which can filter the success or failure arguments through the given filter methods.
     # Quite useful if you want to transform the results of a promise or log them in some way.
-    pipe = (doneFilter, failFilter) ->
+    pipe = (doneFilter, failFilter, progressFilter) ->
       master = new Deferred()
 
       filter = (source, funnel, callback) ->
         if not callback then return candidate[source](master[funnel])
         candidate[source] (args...) ->
           value = callback(args...)
-          if isPromise(value) then value.done(master.resolve).fail(master.reject) else master[funnel](value)
+          if isPromise(value) then value.done(master.resolve).fail(master.reject).progress(master.notify) else master[funnel](value)
 
       filter('done', 'resolve', doneFilter)
       filter('fail', 'reject', failFilter)
+      filter('progress', 'notify', progressFilter)
 
       return master
 
@@ -113,17 +117,20 @@ Deferred = ->
     return ->
       if state is PENDING
         state = finalState
-        closingArguments = arguments
-        execute callbacks, closingArguments, context
+        closingArguments[finalState] = arguments
+        execute callbacks, closingArguments[finalState], context
         return candidate
       return this
   # Now we can set up `.resolve([args])` method to close the deferred and call the `done` callbacks,
   @resolve = close RESOLVED, doneCallbacks
-  # and `.reject([args])` to fail it and call the `fail` callbacks.
+  # and `.reject([args])` to fail it and call the `fail` callbacks,
   @reject = close REJECTED, failCallbacks
-  # We can also set up `.resolveWith(context, [args])` and `.rejectWith(context, [args])` to allow setting an execution scope for the callbacks.
+  # and `.notify([args])` to call the `progress` callbacks.
+  @notify = close PENDING, progressCallbacks
+  # We can also set up `.resolveWith(context, [args])`, `.rejectWith(context, [args])`, and `.notifyWith(context, [args])` to allow setting an execution scope for the callbacks.
   @resolveWith = (context, args) -> close(RESOLVED, doneCallbacks, context)(args...)
   @rejectWith = (context, args) -> close(REJECTED, failCallbacks, context)(args...)
+  @notifyWith = (context, args) -> close(PENDING, progressCallbacks, context)(args...)
 
   return this
 
