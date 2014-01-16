@@ -34,7 +34,7 @@ Simply Deferred is fullly compatible with jQuery's API, so the [docs and usage](
 * `deferred.reject()`
 * `deferred.pipe()`
 * `deferred.then()`
-* `when()`
+* `Deferred.when()`
 
 ###Collaborating
 Please feel free to raise issues on [github.com/sudhirj/simply-deferred/issues](https://github.com/sudhirj/simply-deferred/issues) - both obvious bugs or incompatibilities with jQuery are welcome.
