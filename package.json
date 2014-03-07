@@ -10,7 +10,7 @@
   },
   "main": "./deferred",
   "dependencies": [],
-  "devDependencies": ["mocha", "underscore"],
+  "devDependencies": ["mocha", "underscore", "uglify-js"],
   "optionalDependencies": {},
   "engines": {
     "node": "*"
