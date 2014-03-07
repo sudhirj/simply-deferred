@@ -1,2 +1,2 @@
 coffee -c *.coffee
-./node_modules/mocha/bin/mocha *.js && uglifyjs deferred.js -c -m -o deferred.min.js
+./node_modules/mocha/bin/mocha *.js && ./node_modules/uglify-js/bin/uglifyjs deferred.js -c -m -o deferred.min.js
