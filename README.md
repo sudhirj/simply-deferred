@@ -1,6 +1,8 @@
 #Simply Deferred
 ###jQuery-like Deferred API for Node and the browser
 
+*Simply Deferred is now feature complete. Bug fixes will be made, but no API changes are expected unless they're to ensure compliance with the jQuery API.*
+
 ##Installation
     npm install simply-deferred
 
