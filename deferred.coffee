@@ -135,9 +135,9 @@ Deferred = ->
   return this
 
 # If we're dealing with multiple deferreds, it would be nifty to have a way to run code after all of them succeed (or any of them fail).
-# Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments (or an array of them).
+# Let's set up a `.when([deferreds])` method to do that. It should be able to take any number or deferreds as arguments.
 _when = ->
-  defs = flatten arguments
+  defs = Array.prototype.slice.apply arguments
   if defs.length == 1
     # small optimization: pass a single deferred object along
     return if isPromise defs[0] then defs[0] else (new Deferred()).resolve(defs[0]).promise()
