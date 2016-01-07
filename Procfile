@@ -1,2 +1,2 @@
-compile: coffee -cw *.coffee
-test: ./node_modules/mocha/bin/mocha *.js -Gw
+compile: npm run build
+test: npm test

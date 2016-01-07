@@ -10,7 +10,18 @@
   },
   "main": "./deferred",
   "dependencies": [],
-  "devDependencies": ["mocha", "underscore", "uglify-js"],
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "mocha": "*",
+    "uglify-js": "*",
+    "underscore": "*"
+  },
+  "scripts": {
+    "build": "coffee -c *.coffee",
+    "buildWatch": "coffee -cw *.coffee",
+    "test": "mocha *.js -G",
+    "testWatch": "mocha *.js -Gw"
+  },
   "optionalDependencies": {},
   "engines": {
     "node": "*"
