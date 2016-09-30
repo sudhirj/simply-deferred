@@ -403,6 +403,16 @@ describe 'deferred', ->
       it 'should handle zero arguments', (done) ->
         deferred.when().done(done)
 
+      it 'should pass objects through', ->
+        value = {}
+        deferred.when(value).done((deferredValue) ->
+          assert.strictEqual value, deferredValue
+        )
+      it 'should pass arrays through', ->
+        value = []
+        deferred.when(value).done((deferredValue) ->
+          assert.strictEqual value, deferredValue
+        )
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
     it 'should install .Deferred', ->
