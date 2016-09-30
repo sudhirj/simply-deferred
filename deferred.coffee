@@ -5,7 +5,7 @@
 # ####[Source (github)](http://github.com/sudhirj/simply-deferred) | [Documentation](https://github.com/sudhirj/simply-deferred#simply-deferred)
 # &copy; Sudhir Jonathan [sudhirjonathan.com](http://www.sudhirjonathan.com)
 
-VERSION = '3.0.0'
+VERSION = '3.1.0'
 
 # First, let's set up the constants that we'll need to signify the state of the `deferred` object. These will be returned from the `state()` method.
 
