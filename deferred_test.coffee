@@ -288,6 +288,7 @@ describe 'deferred', ->
         done() if result is 'r2'
 
       def.resolve('r1')
+      null
 
     it 'should allow changing the state', (done) ->
       def = deferred.Deferred()
@@ -405,14 +406,14 @@ describe 'deferred', ->
 
       it 'should pass objects through', ->
         value = {}
-        deferred.when(value).done((deferredValue) ->
+        deferred.when(value).done (deferredValue) ->
           assert.strictEqual value, deferredValue
-        )
+
       it 'should pass arrays through', ->
         value = []
-        deferred.when(value).done((deferredValue) ->
+        deferred.when(value).done (deferredValue) ->
           assert.strictEqual value, deferredValue
-        )
+
   describe 'installation into a jQuery compatible library', ->
     exampleArgs = [42, 24]
     it 'should install .Deferred', ->
@@ -474,4 +475,3 @@ describe 'deferred', ->
       zepto.ajax({
         success: null
       }).done(done)
-
