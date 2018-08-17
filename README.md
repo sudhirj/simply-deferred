@@ -9,15 +9,17 @@
 
 
 ## Usage
-    var Deferred = require('simply-deferred').Deferred;
-    var rendering = new Deferred();
-    rendering.done(function(){
-        console.log('Finished rendering');
-    });
+```javascript
+var Deferred = require('simply-deferred').Deferred;
+var rendering = new Deferred();
+rendering.done(function(){
+    console.log('Finished rendering');
+});
 
-    //...
+//...
 
-    rendering.resolve();
+rendering.resolve();
+```
 
 ## API
 Simply Deferred is fullly compatible with jQuery's API, so the [docs and usage](http://api.jquery.com/category/deferred-object/) are the same. Like the jQuery deferred API, it provides the following methods:
